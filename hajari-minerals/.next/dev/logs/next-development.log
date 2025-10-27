@@ -1,6 +1,0 @@
-[00:01:07.243] Server  ERROR   Error: Cannot find module '/Users/apple/hajari-minerals/hajari-minerals/.next/dev/server/middleware-manifest.json'
-Require stack:
-- /Users/apple/hajari-minerals/hajari-minerals/node_modules/next/dist/server/next-server.js
-- /Users/apple/hajari-minerals/hajari-minerals/node_modules/next/dist/server/dev/next-dev-server.js
-- /Users/apple/hajari-minerals/hajari-minerals/node_modules/next/dist/server/next.js
-- /Users/apple/hajari-minerals/hajari-minerals/node_modules/next/dist/server/lib/start-server.js

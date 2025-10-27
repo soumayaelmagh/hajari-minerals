@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import { defineConfig } from "tailwindcss";
+
+export default defineConfig({
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -7,11 +8,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bgDark: "#0f1114",   // deep charcoal background
-        stone: "#d4c9b3",    // warm beige accent
-        textDim: "#9ca3af",  // soft gray for secondary text
+        bgDark: "#0f1114",   // site background
+        stone: "#d4c9b3",    // beige accent
+        textDim: "#9ca3af",  // muted gray
       },
     },
   },
   plugins: [],
-};
+});
