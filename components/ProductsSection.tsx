@@ -150,8 +150,8 @@ const PRODUCTS: Product[] = [
 export default function ProductsSection() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"All" | "Ferrous" | "Alloys" | "Non-metallic">("All");
-  const [quoteProduct, setQuoteProduct] = useState<Product | null>(null);
-
+  const [quoteProduct, setQuoteProduct] = useState<{slug:string; name:string} | null>(null);
+ 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return PRODUCTS.filter((p) => {
@@ -264,7 +264,7 @@ export default function ProductsSection() {
                 {/* Actions */}
                 <div className="pt-3 flex gap-3">
                   <button
-                    onClick={() => setQuoteProduct(p)}
+                    onClick={() => setQuoteProduct({ slug: p.slug, name: p.name })}
                     className="px-4 py-2 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition"
                   >
                     Request Quote
@@ -290,12 +290,12 @@ export default function ProductsSection() {
       </div>
 
       {/* Modal */}
-      <RequestQuoteModal
-        open={!!quoteProduct}
-        product={quoteProduct}
-        onClose={() => setQuoteProduct(null)}
-        toEmail="Maemak.90s@gmail.com"
-      />
+     <RequestQuoteModal
+      open={!!quoteProduct}
+      product={quoteProduct}
+      onClose={() => setQuoteProduct(null)}
+    />
+
     </section>
   );
 }

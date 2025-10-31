@@ -1,211 +1,281 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mail, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { X, Mail, CheckCircle2, TriangleAlert } from "lucide-react";
 
-type Product = {
-  name: string;
-  slug: string;
-  specs?: string[];
+type RequestQuoteModalProps = {
+  open: boolean;
+  product: { slug: string; name: string } | null;
+  onClose: () => void;
+  autoCloseMs?: number; // default: 1200
+};
+
+const PREFS_KEY = "rq_prefs_v1"; // localStorage key
+
+type Prefs = {
+  destination?: string;
+  incoterm?: "FOB" | "CIF";
+  channel?: "email" | "whatsapp";
 };
 
 export default function RequestQuoteModal({
   open,
-  onClose,
   product,
-  toEmail = "Maemak.90s@gmail.com", // where enquiries go
-}: {
-  open: boolean;
-  onClose: () => void;
-  product: Product | null;
-  toEmail?: string;
-}) {
+  onClose,
+  autoCloseMs = 1200,
+}: RequestQuoteModalProps) {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
-  const [incoterm, setIncoterm] = useState<"FOB" | "CIF">("FOB");
-  const [volume, setVolume] = useState<number | "">("");
+  const [volume, setVolume] = useState<number>(200);
   const [destination, setDestination] = useState("");
+  const [incoterm, setIncoterm] = useState<"FOB" | "CIF">("FOB");
   const [message, setMessage] = useState("");
+  const [channel, setChannel] = useState<"email" | "whatsapp">("email");
 
-  const initialFocusRef = useRef<HTMLInputElement>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [sent, setSent] = useState<null | "ok" | "err">(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // focus first field when opened
+  // toast
+  const [showToast, setShowToast] = useState(false);
+
+  // anti-spam
+  const honeyRef = useRef<HTMLInputElement>(null);
+  
+  // Load saved prefs on first open
   useEffect(() => {
-    if (open) {
-      const t = setTimeout(() => initialFocusRef.current?.focus(), 60);
-      return () => clearTimeout(t);
-    }
+    if (!open) return;
+    try {
+      const raw = localStorage.getItem(PREFS_KEY);
+      if (raw) {
+        const prefs: Prefs = JSON.parse(raw);
+        if (prefs.destination) setDestination(prefs.destination);
+        if (prefs.incoterm) setIncoterm(prefs.incoterm);
+        if (prefs.channel) setChannel(prefs.channel);
+      }
+    } catch {}
   }, [open]);
 
-  // ESC to close
+  // Persist prefs whenever user changes them
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    if (open) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    if (!open) return;
+    const prefs: Prefs = { destination, incoterm, channel };
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    } catch {}
+  }, [open, destination, incoterm, channel]);
 
-  const mailtoHref = () => {
-    if (!product) return "#";
-    const subject = encodeURIComponent(`[Quote Request] ${product.name} — ${company || name || ""}`);
-    const body = encodeURIComponent(
-      [
-        `Product: ${product.name}`,
-        `Incoterm: ${incoterm}`,
-        `Est. Monthly Volume (mt): ${volume || "-"}`,
-        `Destination Port / City: ${destination || "-"}`,
-        "",
-        `Name: ${name || "-"}`,
-        `Company: ${company || "-"}`,
-        `Email: ${email || "-"}`,
-        "",
-        "Message:",
-        message || "-",
-      ].join("\n")
-    );
-    return `mailto:${toEmail}?subject=${subject}&body=${body}`;
-  };
+  // reset transient states when modal opens
+  useEffect(() => {
+    if (open) {
+      setSent(null);
+      setErrorMsg("");
+      setShowToast(false);
+    }
+  }, [open, product]);
+
+  const canSend = useMemo(() => {
+    const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    return !!product && name.trim().length > 1 && okEmail && destination.trim().length > 1;
+  }, [product, name, email, destination]);
+
+  async function submitQuote() {
+    if (!canSend || isSending || !product) return;
+    if (honeypotFilled(honeyRef)) return;
+
+    setIsSending(true);
+    setSent(null);
+    setErrorMsg("");
+
+    const topic = `Quote request — ${product.name}`;
+    const composedMessage =
+      message?.trim()
+        ? `Additional notes:\n${message.trim()}`
+        : "—";
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _honey: "",
+          name,
+          company,
+          email,
+          topic,
+          volume,
+          budget: "",
+          message: `Product: ${product.name}\nIncoterm: ${incoterm}\nDestination: ${destination}\nPreferred channel: ${channel}\n\n${composedMessage}`,
+          incoterm,
+          destination,
+          channel,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setSent("err");
+        setErrorMsg(data?.error || "Failed to send");
+        return;
+      }
+
+      setSent("ok");
+      setShowToast(true);
+
+      // Auto-close after a short delay
+      const t = setTimeout(() => {
+        setShowToast(false);
+        onClose();
+      }, autoCloseMs);
+      return () => clearTimeout(t as unknown as number);
+    } catch (e: any) {
+      setSent("err");
+      setErrorMsg(e?.message || "Network error");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  if (!open || !product) return null;
 
   return (
-    <AnimatePresence>
-      {open && product && (
-        <motion.div
-          className="fixed inset-0 z-80 flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* overlay */}
-          <div
-            className="absolute inset-0 bg-black/70"
-            onClick={onClose}
-            aria-hidden
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-80 flex items-end sm:items-center justify-center p-0 sm:p-6">
+      {/* Backdrop */}
+      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/70" />
+
+      {/* Panel */}
+      <div className="relative w-full sm:max-w-xl bg-[#141414] border border-white/10 rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h3 className="text-lg font-semibold">
+            Request quote — <span className="text-[#c2a165]">{product.name}</span>
+          </h3>
+          <button onClick={onClose} className="text-white/70 hover:text-white" aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* honeypot */}
+          <input ref={honeyRef} type="text" className="hidden" tabIndex={-1} aria-hidden="true" />
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="Your name" value={name} onChange={setName} placeholder="Jane Doe" />
+            <Field label="Company" value={company} onChange={setCompany} placeholder="Acme Metals Ltd." />
+          </div>
+          <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field
+              label="Estimated volume (mt)"
+              value={String(volume)}
+              onChange={(v) => setVolume(Number(v) || 0)}
+              type="number"
+              placeholder="200"
+            />
+            <Field
+              label="Destination (city, country)"
+              value={destination}
+              onChange={setDestination}
+              placeholder="Jebel Ali, UAE"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Select
+              label="Incoterm"
+              value={incoterm}
+              onChange={(v) => setIncoterm(v as "FOB" | "CIF")}
+              options={[
+                { label: "FOB", value: "FOB" },
+                { label: "CIF", value: "CIF" },
+              ]}
+            />
+
+            <RadioChips
+              label="Preferred channel"
+              value={channel}
+              onChange={setChannel}
+              options={[
+                { label: "Email", value: "email" },
+                { label: "WhatsApp", value: "whatsapp" },
+              ]}
+            />
+          </div>
+
+          <TextArea
+            label="Notes (grade, sizing, timing, inspection…) — optional"
+            value={message}
+            onChange={setMessage}
+            placeholder="e.g., Cr2O3 40%+, lumpy 10–50mm, shipment within 30 days"
           />
-          {/* dialog */}
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            className="relative bg-[#111] text-white w-[92vw] max-w-xl rounded-2xl border border-white/10 p-6 shadow-2xl"
-            initial={{ scale: 0.98, y: 12, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.98, y: 12, opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
+
+          <div className="flex flex-wrap gap-3 pt-1">
+            <button
+              onClick={submitQuote}
+              disabled={!canSend || isSending}
+              className={`px-5 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition
+                ${!canSend || isSending
+                  ? "bg-[#c2a165]/50 text-black/70 cursor-not-allowed"
+                  : "bg-[#c2a165] text-black hover:bg-[#a98755]"}`}
+            >
+              {isSending ? "Sending…" : (<><Mail size={18}/> Send request</>)}
+            </button>
             <button
               onClick={onClose}
-              className="absolute right-3 top-3 p-2 rounded-lg hover:bg-white/5 transition"
-              aria-label="Close"
+              className="px-5 py-3 rounded-lg border border-[#c2a165]/50 text-white hover:bg-[#c2a165] hover:text-black transition"
             >
-              <X size={18} />
+              Cancel
             </button>
+          </div>
 
-            <h3 className="text-xl font-semibold mb-1">
-              Request Quote — <span className="text-[#c2a165]">{product.name}</span>
-            </h3>
-            <p className="text-white/60 text-sm mb-4">
-              Share a few details and we’ll respond with specs, sampling, and shipment options.
+          {sent === "ok" && (
+            <p className="mt-1 text-green-400 text-sm inline-flex items-center gap-2">
+              <CheckCircle2 size={16}/> Thanks! Your quote request was sent.
             </p>
+          )}
+          {sent === "err" && (
+            <p className="mt-1 text-red-400 text-sm inline-flex items-center gap-2">
+              <TriangleAlert size={16}/> Couldn’t send. {errorMsg}
+            </p>
+          )}
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <Field
-                label="Your name"
-                value={name}
-                onChange={setName}
-                ref={initialFocusRef}
-                placeholder="Jane Doe"
-              />
-              <Field
-                label="Company"
-                value={company}
-                onChange={setCompany}
-                placeholder="Acme Metals Ltd."
-              />
-              <Field
-                label="Email"
-                value={email}
-                onChange={setEmail}
-                placeholder="you@email.com"
-                type="email"
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <label className="block text-sm">
-                  <span className="text-white/70">Incoterm</span>
-                  <select
-                    value={incoterm}
-                    onChange={(e) => setIncoterm(e.target.value as "FOB" | "CIF")}
-                    className="mt-2 w-full rounded-lg bg-[#0f0f0f] border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
-                  >
-                    <option value="FOB">FOB</option>
-                    <option value="CIF">CIF</option>
-                  </select>
-                </label>
-                <label className="block text-sm">
-                  <span className="text-white/70">Est. monthly volume (mt)</span>
-                  <input
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={volume}
-                    onChange={(e) => setVolume(e.target.value === "" ? "" : Number(e.target.value))}
-                    className="mt-2 w-full rounded-lg bg-[#0f0f0f] border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
-                    placeholder="500"
-                  />
-                </label>
-              </div>
-              <Field
-                label="Destination port / city"
-                value={destination}
-                onChange={setDestination}
-                placeholder="Jebel Ali / Mundra / Alexandria…"
-              />
-              <TextArea
-                label="Message (optional)"
-                value={message}
-                onChange={setMessage}
-                placeholder="Specs, timeline, grade/purity, sampling/inspection…"
-              />
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <a
-                href={mailtoHref()}
-                className="px-5 py-3 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition inline-flex items-center gap-2"
-                onClick={onClose}
-              >
-                <Mail size={18} /> Send request
-              </a>
-              <button
-                onClick={onClose}
-                className="px-5 py-3 rounded-lg border border-[#c2a165]/50 text-white hover:bg-[#c2a165] hover:text-black transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
+      {/* Toast (bottom center) */}
+      {showToast && (
+        <div className="pointer-events-none fixed bottom-5 inset-x-0 flex justify-center z-85">
+          <div className="rounded-lg bg-black/80 text-white border border-white/10 px-4 py-2 text-sm shadow">
+            <span className="inline-flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              Request sent — we’ll contact you shortly.
+            </span>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </div>
   );
 }
 
-/* ---------- small inputs ---------- */
-type FieldProps = {
+/* ---------------- helpers & inputs ---------------- */
+
+function honeypotFilled(ref: React.MutableRefObject<HTMLInputElement | null>) {
+  return !!ref.current?.value;
+}
+
+function Field({
+  label, value, onChange, placeholder, type = "text",
+}: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
-};
-const Field = Object.assign(
-  (
-    { label, value, onChange, placeholder, type = "text" }: FieldProps,
-    ref?: React.Ref<HTMLInputElement>
-  ) => (
+}) {
+  return (
     <label className="block text-sm">
       <span className="text-white/70">{label}</span>
       <input
-        ref={ref as any}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -213,19 +283,13 @@ const Field = Object.assign(
         className="mt-2 w-full rounded-lg bg-[#0f0f0f] border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
       />
     </label>
-  )
-);
+  );
+}
 
 function TextArea({
-  label,
-  value,
-  onChange,
-  placeholder,
+  label, value, onChange, placeholder,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -237,6 +301,61 @@ function TextArea({
         placeholder={placeholder}
         className="mt-2 w-full rounded-lg bg-[#0f0f0f] border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60 resize-y"
       />
+    </label>
+  );
+}
+
+function Select({
+  label, value, onChange, options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+}) {
+  return (
+    <label className="block text-sm">
+      <span className="text-white/70">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full rounded-lg bg-[#0f0f0f] border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function RadioChips({
+  label, value, onChange, options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: any) => void;
+  options: { label: string; value: string }[];
+}) {
+  return (
+    <label className="block text-sm">
+      <span className="text-white/70">{label}</span>
+      <div className="mt-2 flex gap-2">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            type="button"
+            className={`px-3 py-1.5 rounded-full border text-sm transition ${
+              value === o.value
+                ? "bg-[#c2a165] text-black border-[#c2a165]"
+                : "border-white/20 text-white/80 hover:border-white/50"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
     </label>
   );
 }
