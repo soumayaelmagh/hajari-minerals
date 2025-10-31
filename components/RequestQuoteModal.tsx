@@ -15,7 +15,6 @@ const PREFS_KEY = "rq_prefs_v1"; // localStorage key
 type Prefs = {
   destination?: string;
   incoterm?: "FOB" | "CIF";
-  channel?: "email" | "whatsapp";
 };
 
 export default function RequestQuoteModal({
@@ -31,18 +30,18 @@ export default function RequestQuoteModal({
   const [destination, setDestination] = useState("");
   const [incoterm, setIncoterm] = useState<"FOB" | "CIF">("FOB");
   const [message, setMessage] = useState("");
-  const [channel, setChannel] = useState<"email" | "whatsapp">("email");
+
+  // fixed channel (email-only)
+  const [channel] = useState<"email">("email");
 
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState<null | "ok" | "err">(null);
   const [errorMsg, setErrorMsg] = useState("");
-
-  // toast
   const [showToast, setShowToast] = useState(false);
 
-  // anti-spam
+  // honeypot
   const honeyRef = useRef<HTMLInputElement>(null);
-  
+
   // Load saved prefs on first open
   useEffect(() => {
     if (!open) return;
@@ -52,7 +51,6 @@ export default function RequestQuoteModal({
         const prefs: Prefs = JSON.parse(raw);
         if (prefs.destination) setDestination(prefs.destination);
         if (prefs.incoterm) setIncoterm(prefs.incoterm);
-        if (prefs.channel) setChannel(prefs.channel);
       }
     } catch {}
   }, [open]);
@@ -60,11 +58,11 @@ export default function RequestQuoteModal({
   // Persist prefs whenever user changes them
   useEffect(() => {
     if (!open) return;
-    const prefs: Prefs = { destination, incoterm, channel };
+    const prefs: Prefs = { destination, incoterm };
     try {
       localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
     } catch {}
-  }, [open, destination, incoterm, channel]);
+  }, [open, destination, incoterm]);
 
   // reset transient states when modal opens
   useEffect(() => {
@@ -109,7 +107,7 @@ export default function RequestQuoteModal({
           message: `Product: ${product.name}\nIncoterm: ${incoterm}\nDestination: ${destination}\nPreferred channel: ${channel}\n\n${composedMessage}`,
           incoterm,
           destination,
-          channel,
+          channel, // always "email"
         }),
       });
 
@@ -124,11 +122,13 @@ export default function RequestQuoteModal({
       setShowToast(true);
 
       // Auto-close after a short delay
-      const t = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         setShowToast(false);
         onClose();
       }, autoCloseMs);
-      return () => clearTimeout(t as unknown as number);
+
+      // clear on unmount or reopen
+      return () => window.clearTimeout(timer);
     } catch (e: any) {
       setSent("err");
       setErrorMsg(e?.message || "Network error");
@@ -192,15 +192,11 @@ export default function RequestQuoteModal({
               ]}
             />
 
-            <RadioChips
-              label="Preferred channel"
-              value={channel}
-              onChange={setChannel}
-              options={[
-                { label: "Email", value: "email" },
-                { label: "WhatsApp", value: "whatsapp" },
-              ]}
-            />
+            {/* Static info since channel is email-only */}
+            <div className="text-sm text-white/60 self-end">
+              Preferred contact method:{" "}
+              <span className="text-[#c2a165] font-medium">Email</span>
+            </div>
           </div>
 
           <TextArea
@@ -325,37 +321,6 @@ function Select({
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-    </label>
-  );
-}
-
-function RadioChips({
-  label, value, onChange, options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: any) => void;
-  options: { label: string; value: string }[];
-}) {
-  return (
-    <label className="block text-sm">
-      <span className="text-white/70">{label}</span>
-      <div className="mt-2 flex gap-2">
-        {options.map((o) => (
-          <button
-            key={o.value}
-            onClick={() => onChange(o.value)}
-            type="button"
-            className={`px-3 py-1.5 rounded-full border text-sm transition ${
-              value === o.value
-                ? "bg-[#c2a165] text-black border-[#c2a165]"
-                : "border-white/20 text-white/80 hover:border-white/50"
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
     </label>
   );
 }
