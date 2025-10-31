@@ -33,7 +33,7 @@ export default function AboutSection() {
       <div className="absolute top-0 left-0 right-0 h-40 bg-linear-to-b from-black to-transparent z-0" />
 
       {/* Gold texture overlay (lazy loaded via CSS) */}
-      <div className="absolute inset-0 opacity-10 bg-[url('/textures/gold-dust.webp')] bg-cover bg-center bg-fixed pointer-events-none" />
+      <div className="absolute inset-0 opacity-10 bg-[url('/textures/gold-dust.jpg')] bg-cover bg-center bg-fixed pointer-events-none" />
 
       <motion.div
         variants={container}

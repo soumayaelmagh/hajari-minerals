@@ -284,19 +284,21 @@ export default function ContactSection() {
           </div>
 
           {/* Slim map banner */}
-          <div className="h-36 rounded-xl overflow-hidden border border-white/10 relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/maps/port-sudan.jpg"
-              alt="Port Sudan map"
-              className="w-full h-full object-cover"
+         <div className="mt-8 p-0.5 rounded-xl bg-linear-to-r from-[#c2a165]/30 to-transparent">
+          <div className="rounded-xl overflow-hidden border border-white/10 shadow-lg">
+            <iframe
+              title="Port Sudan Map"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3495.085195141776!2d37.21036301509894!3d19.61633824142044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x16931f0073c4e1ad%3A0x2545a5012634eebc!2sPort%20Sudan%2C%20Sudan!5e0!3m2!1sen!2sus!4v1705250000000!5m2!1sen!2sus"
+              width="100%"
+              height="320"
+              style={{ border: 0 }}
               loading="lazy"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-2 left-3 text-sm">
-              <span className="px-2 py-1 rounded bg-white text-black">Port Sudan</span>
-            </div>
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
           </div>
+        </div>
+
         </motion.aside>
       </div>
     </section>
