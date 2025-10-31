@@ -77,7 +77,7 @@ export default function HeroSection() {
           className="text-4xl md:text-6xl font-semibold leading-tight text-white drop-shadow-lg"
           variants={child}
         >
-          From the <span className="text-stone">Rich Heart of Sudan</span> to Global Markets
+          From the <span className="text-stone">Rich Heart of Africa</span> to Global Markets
         </motion.h1>
 
         <motion.p

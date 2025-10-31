@@ -12,7 +12,6 @@ export default function HomePage() {
     <main className="relative pt-20 md:pt-24">
       <Header />
       <HeroClient />
-      <AboutSection />
       <OperationsSection />
       <ProductsSection />
       <SustainabilitySection />
