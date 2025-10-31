@@ -8,7 +8,7 @@ const images = [
   "/hero/mine.png",
   "/hero/port.png",
   "/hero/minerals.jpg",
-  "/hero/workers.png",
+  "/hero/workers.jpeg",
 ];
 const parent: Variants = {
   hidden: { opacity: 0, y: 10 },
