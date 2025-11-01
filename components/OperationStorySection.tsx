@@ -36,7 +36,7 @@ const slides = [
   {
     title: "Export & Logistics",
     description:
-      "Partnered with logistics hubs at Port Sudan, Hajari Minerals delivers refined minerals to global markets with precision, reliability, and on-time efficiency.",
+      "Partnered with logistics at Port Sudan, Hajari Minerals delivers refined minerals to global markets with precision, reliability, and on-time efficiency.",
     icon: <Ship size={42} className="text-stone mb-4" />,
     image: "/operations/export.png",
   },

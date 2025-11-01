@@ -5,10 +5,11 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const images = [
+  "/hero/workers.jpeg",
   "/hero/mine.png",
   "/hero/port.png",
   "/hero/minerals.jpg",
-  "/hero/workers.jpeg",
+  
 ];
 const parent: Variants = {
   hidden: { opacity: 0, y: 10 },

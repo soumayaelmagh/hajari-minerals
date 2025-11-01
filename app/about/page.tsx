@@ -4,7 +4,7 @@ import AboutSection from "../../components/AboutSection";
 
 export default function OperationsPage() {
   return (
-    <main className="relative">
+    <main className="relative pt-20 md:pt-24">
       <Header />
       <AboutSection />
       <Footer />

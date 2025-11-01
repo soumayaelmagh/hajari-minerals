@@ -5,10 +5,6 @@ import { motion } from "framer-motion";
 import { Filter, Search } from "lucide-react";
 import RequestQuoteModal from "@/components/RequestQuoteModal";
 
-/** ---------------------------------------------
- * Product data (summaries tuned from client doc)
- * Add images under /public/products/<slug>.jpg|webp
- * --------------------------------------------- */
 type Product = {
   slug: string;
   name: string;
@@ -22,65 +18,98 @@ type Product = {
 
 const PRODUCTS: Product[] = [
   {
-    slug: "iron-ore",
-    name: "Iron Ore (Hematite / Magnetite)",
+    slug: "iron-ore-h",
+    name: "Iron Ore (Hematite)",
     category: "Ferrous",
-    image: "/products/iron-ore.jpg",
+    image: "/products/iron-ore-hematite.png",
     summary:
       "High-grade hematite and magnetite ore sourced from Sudanese mines, suitable for steelmaking and sintering.",
     specs: ["Fe 58–64%+", "Size: 0–10 / 10–50 mm", "Moisture ≤ 8%"],
     grade: "Fe 58–64%+",
-    minOrderMt: 500,
+    minOrderMt: 25,
+  },
+   {
+    slug: "iron-ore-m",
+    name: "Iron Ore (Magnetite)",
+    category: "Ferrous",
+    image: "/products/iron-ore-magnetite.png",
+    summary:
+      "High-grade hematite and magnetite ore sourced from Sudanese mines, suitable for steelmaking and sintering.",
+    specs: ["Fe 58–64%+", "Size: 0–10 / 10–50 mm", "Moisture ≤ 8%"],
+    grade: "Fe 58–64%+",
+    minOrderMt: 25,
   },
   {
     slug: "chromite",
     name: "Chromite (High Grade)",
     category: "Alloys",
-    image: "/products/chromite.jpg",
+    image: "/products/chromite.png",
     summary:
       "Consistent chromite supply for ferrochrome and refractory applications with stable sizing and low impurities.",
     specs: ["Cr2O3 38–45%+", "SiO2 ≤ 6%", "Size: Lumpy / ROM"],
     grade: "Cr2O3 38–45%+",
-    minOrderMt: 200,
+    minOrderMt: 25,
   },
   {
-    slug: "tungsten-ore",
-    name: "Tungsten Ore (Wolframite / Scheelite)",
+    slug: "tungsten-ore-s",
+    name: "Tungsten Ore (Scheelite)",
     category: "Alloys",
-    image: "/products/tungsten.jpg",
+    image: "/products/tungsten-ore-scheelite.png",
     summary:
       "Wolframite/scheelite concentrates for hard-metal, tooling and alloy production; sampling available.",
     specs: ["WO3 20–50% (concentrate)", "Moisture ≤ 10%"],
     grade: "WO3 20–50%",
-    minOrderMt: 20,
+    minOrderMt: 25,
+  },
+   {
+    slug: "tungsten-ore-w",
+    name: "Tungsten Ore (Wolframite)",
+    category: "Alloys",
+    image: "/products/tungsten-ore-wolframite.jpg",
+    summary:
+      "Wolframite/scheelite concentrates for hard-metal, tooling and alloy production; sampling available.",
+    specs: ["WO3 20–50% (concentrate)", "Moisture ≤ 10%"],
+    grade: "WO3 20–50%",
+    minOrderMt: 25,
   },
   {
     slug: "manganese-ore",
     name: "Manganese Ore",
     category: "Alloys",
-    image: "/products/manganese.jpg",
+    image: "/products/manganese-ore.png",
     summary:
       "Mn ore for ferroalloy production with balanced chemistry and standard industrial sizing.",
     specs: ["Mn 32–44%+", "Size: 10–50 mm"],
     grade: "Mn 32–44%+",
-    minOrderMt: 200,
+    minOrderMt: 25,
   },
   {
     slug: "lead-ore",
     name: "Lead Ore",
     category: "Alloys",
-    image: "/products/lead.jpg",
+    image: "/products/lead-ore.png",
     summary:
       "Lead ore supplied under verified specs and documentation for smelting and refining.",
     specs: ["Pb 40–60% (varies)", "Moisture ≤ 8%"],
     grade: "Pb 40–60%",
-    minOrderMt: 50,
+    minOrderMt: 25,
   },
   {
-    slug: "mica",
-    name: "Mica (Muscovite / Phlogopite)",
+    slug: "mica-m",
+    name: "Mica (Muscovite)",
     category: "Non-metallic",
-    image: "/products/mica.jpg",
+    image: "/products/mica-Muscovite.png",
+    summary:
+      "Mica flakes and sheets for electrical, cosmetic, and industrial uses; consistent color and flake size.",
+    specs: ["Flake size on request", "Low impurity"],
+    grade: "Industrial",
+    minOrderMt: 25,
+  },
+   {
+    slug: "mica-p",
+    name: "Mica (Phlogopite)",
+    category: "Non-metallic",
+    image: "/products/mica-Phlogopite.png",
     summary:
       "Mica flakes and sheets for electrical, cosmetic, and industrial uses; consistent color and flake size.",
     specs: ["Flake size on request", "Low impurity"],
@@ -91,7 +120,7 @@ const PRODUCTS: Product[] = [
     slug: "talc",
     name: "Talc",
     category: "Non-metallic",
-    image: "/products/talc.jpg",
+    image: "/products/talc.png",
     summary:
       "White to off-white talc for paint, plastics, paper and ceramics; controlled particle size.",
     specs: ["Whiteness 80–90", "Customized fineness"],
@@ -102,18 +131,18 @@ const PRODUCTS: Product[] = [
     slug: "limestone",
     name: "Calcium Carbonate (Limestone)",
     category: "Non-metallic",
-    image: "/products/limestone.jpg",
+    image: "/products/calcium-carbonate.png",
     summary:
       "Limestone for construction, cement, and industrial processing with steady CaCO₃ profile.",
     specs: ["CaCO₃ ≥ 90%", "Size/fineness per order"],
     grade: "Industrial",
-    minOrderMt: 500,
+    minOrderMt: 25,
   },
   {
     slug: "kaolin",
     name: "Kaolin",
     category: "Non-metallic",
-    image: "/products/kaolin.jpg",
+    image: "/products/koalin.png",
     summary:
       "Kaolin for ceramics, paper coating, and fillers; consistent brightness and rheology.",
     specs: ["Brightness on request", "Custom mesh/fines"],
@@ -124,7 +153,7 @@ const PRODUCTS: Product[] = [
     slug: "feldspar",
     name: "Feldspar",
     category: "Non-metallic",
-    image: "/products/feldspar.jpg",
+    image: "/products/Feldspar.png",
     summary:
       "Soda/potash feldspar for glass and ceramics; stable chemistry and controlled mesh.",
     specs: ["Na2O/K2O per grade", "Custom mesh"],
@@ -132,15 +161,26 @@ const PRODUCTS: Product[] = [
     minOrderMt: 25,
   },
   {
-    slug: "quartz",
-    name: "Quartz / Silica",
+    slug: "quartz-q",
+    name: "Quartz",
     category: "Non-metallic",
-    image: "/products/quartz.jpg",
+    image: "/products/quartz.png",
     summary:
       "High-purity quartz/silica for glass, foundry, and industrial applications; low contaminant levels.",
     specs: ["SiO2 97–99%+", "Size: Lumpy / Mesh"],
     grade: "SiO2 97–99%+",
-    minOrderMt: 200,
+    minOrderMt: 25,
+  },
+  {
+    slug: "quartz-s",
+    name: "Silica",
+    category: "Non-metallic",
+    image: "/products/Silica.png",
+    summary:
+      "High-purity silica for glass, foundry, and industrial applications; low contaminant levels.",
+    specs: ["SiO2 97–99%+", "Size: Lumpy / Mesh"],
+    grade: "SiO2 97–99%+",
+    minOrderMt: 25,
   },
 ];
 

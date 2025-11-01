@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Mail, MessageCircle, BadgeDollarSign, PackageOpen,
+  Mail, BadgeDollarSign, PackageOpen,
   Clock4, MapPin, Paperclip, CheckCircle2, TriangleAlert
 } from "lucide-react";
 
@@ -29,10 +29,15 @@ export default function ContactSection() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
-  const [volume, setVolume] = useState(500);
-  const [budget, setBudget] = useState(200000);
+
+  // sliders + manual numeric inputs
+  const [volume, setVolume] = useState<number>(25);
+  const [budget, setBudget] = useState<number>(200_000);
+
   const [message, setMessage] = useState("");
-  const [channel, setChannel] = useState<"email" | "whatsapp">("email");
+
+  // fixed channel: email only
+  const channel: "email" = "email";
 
   // UX states
   const [isSending, setIsSending] = useState(false);
@@ -60,7 +65,7 @@ export default function ContactSection() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          _honey: "", // keep empty
+          _honey: "",
           name,
           company,
           email,
@@ -68,9 +73,9 @@ export default function ContactSection() {
           volume,
           budget,
           message,
-          incoterm: "FOB",     // adjust if you expose these in UI
+          incoterm: "FOB",
           destination: "",
-          channel,
+          channel, // always "email"
         }),
       });
 
@@ -84,7 +89,7 @@ export default function ContactSection() {
       setSent("ok");
       // Optional reset
       // setName(""); setCompany(""); setEmail(""); setMessage("");
-      // setVolume(500); setBudget(200000); setTopic("general"); setChannel("email");
+      // setVolume(500); setBudget(200000); setTopic("general");
     } catch (e: any) {
       setSent("err");
       setErrorMsg(e?.message || "Network error");
@@ -108,7 +113,7 @@ export default function ContactSection() {
         >
           <div className="space-y-3">
             <h2 className="text-3xl md:text-5xl font-semibold">
-              Let’s talk <span className="text-[#c2a165]">supply</span> & logistics
+              Connect <span className="text-[#c2a165]">with Our Team</span>
             </h2>
             <p className="text-white/75 max-w-2xl">
               Share your specs, target schedule, and preferences. We’ll align sampling and shipment
@@ -151,24 +156,26 @@ export default function ContactSection() {
             </div>
             <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
 
-            {/* Sliders */}
+            {/* Sliders + manual inputs */}
             <div className="grid md:grid-cols-2 gap-6">
-              <SliderField
+              <DualNumberField
                 label="Estimated monthly volume (metric tons)"
                 value={volume}
                 onChange={setVolume}
-                min={50}
+                min={25}
                 max={10000}
-                step={50}
+                step={25}
+                unit="mt"
               />
-              <SliderField
+              <DualNumberField
                 label="Estimated budget (USD)"
                 value={budget}
                 onChange={setBudget}
-                min={10000}
-                max={1000000}
-                step={10000}
+                min={10_000}
+                max={1_000_000}
+                step={10_000}
                 icon={<BadgeDollarSign size={16} className="text-[#c2a165]" />}
+                unit="$"
               />
             </div>
 
@@ -179,29 +186,12 @@ export default function ContactSection() {
               placeholder="Share grade/purity targets, sizing, timeline, inspection requirements…"
             />
 
-            {/* Preferred channel */}
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-white/70 text-sm">Prefer to be contacted via</span>
-              <button
-                onClick={() => setChannel("email")}
-                className={`px-3 py-1.5 rounded-full border text-sm transition inline-flex items-center gap-2 ${
-                  channel === "email"
-                    ? "bg-[#c2a165] text-black border-[#c2a165]"
-                    : "border-white/20 text-white/80 hover:border-white/50"
-                }`}
-              >
+            {/* Preferred channel (email only) */}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
+              <span>Preferred contact method:</span>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c2a165] bg-[#c2a165] text-black">
                 <Mail size={16} /> Email
-              </button>
-              <button
-                onClick={() => setChannel("whatsapp")}
-                className={`px-3 py-1.5 rounded-full border text-sm transition inline-flex items-center gap-2 ${
-                  channel === "whatsapp"
-                    ? "bg-[#c2a165] text-black border-[#c2a165]"
-                    : "border-white/20 text-white/80 hover:border-white/50"
-                }`}
-              >
-                <MessageCircle size={16} /> WhatsApp
-              </button>
+              </span>
             </div>
 
             {/* Actions */}
@@ -227,7 +217,7 @@ export default function ContactSection() {
               <button
                 onClick={() => {
                   setName(""); setCompany(""); setEmail(""); setMessage("");
-                  setVolume(500); setBudget(200000); setTopic("general"); setChannel("email");
+                  setVolume(25); setBudget(200000); setTopic("general");
                   setSent(null); setErrorMsg("");
                 }}
                 className="px-5 py-3 rounded-lg border border-[#c2a165]/50 text-white hover:bg-[#c2a165] hover:text-black transition"
@@ -267,38 +257,45 @@ export default function ContactSection() {
             <InfoCard
               icon={<MapPin className="text-[#c2a165]" size={22} />}
               title="Logistics"
-              body={<>Shipments coordinated via <strong>Port Sudan</strong> under FOB/CIF.</>}
+              body={
+                 <ul className="list-inside space-y-1 text-white/75 text-sm">
+                  <li>Shipments coordinated via Port Sudan under FOB/CIF.</li>
+                  <li>Atayib Salih Street, Manshiya, Khartoum, Sudan.</li>
+                  <li>Hai Al Matar, portsudan, Sudan</li> 
+                 </ul>}
+
             />
             <InfoCard
               icon={<Clock4 className="text-[#c2a165]" size={22} />}
-              title="Typical flow"
+              title="Process flow"
               body={
                 <ol className="list-decimal list-inside space-y-1 text-white/75 text-sm">
-                  <li>Share specs & target schedule</li>
-                  <li>Sampling / indicative analysis</li>
-                  <li>Commercial terms & documentation</li>
-                  <li>Shipment & tracking updates</li>
+                  <li>Inquiry and Specification: Clients share their mineral requirements, preferred grade, and processing level. Our team reviews specifications and confirms availability from our production sites.</li>
+                  <li>Quotation and Agreement: We issue a detailed quotation covering product specifications, delivery terms, and pricing. Once both sides agree, a supply contract is signed under internationally recognized trade terms.</li>
+                  <li>Sampling and Quality Verification: Before shipment, we conduct testing to confirm product quality. Samples can be provided for client review or independent verification prior to final order confirmation.</li>
+                  <li>Logistics and Export Preparation: Our operations team handles transport to Port Sudan and prepares all required export documentation in line with international standards.</li>
+                  <li>Delivery Options: We offer flexible delivery terms. Clients may choose FOB Port Sudan or CIF to destination port, depending on their logistics preference.</li>
+                  <li>Payment and After-Sales Support: Payment follows the agreed contract terms. We maintain transparent communication from order to delivery to ensure a smooth and reliable experience.</li>
                 </ol>
               }
             />
           </div>
 
           {/* Slim map banner */}
-         <div className="mt-8 p-0.5 rounded-xl bg-linear-to-r from-[#c2a165]/30 to-transparent">
-          <div className="rounded-xl overflow-hidden border border-white/10 shadow-lg">
-            <iframe
-              title="Port Sudan Map"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3495.085195141776!2d37.21036301509894!3d19.61633824142044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x16931f0073c4e1ad%3A0x2545a5012634eebc!2sPort%20Sudan%2C%20Sudan!5e0!3m2!1sen!2sus!4v1705250000000!5m2!1sen!2sus"
-              width="100%"
-              height="320"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
+          <div className="mt-8 p-0.5 rounded-xl bg-linear-to-r from-[#c2a165]/30 to-transparent">
+            <div className="rounded-xl overflow-hidden border border-white/10 shadow-lg">
+              <iframe
+                title="Port Sudan Map"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3495.085195141776!2d37.21036301509894!3d19.61633824142044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x16931f0073c4e1ad%3A0x2545a5012634eebc!2sPort%20Sudan%2C%20Sudan!5e0!3m2!1sen!2sus!4v1705250000000!5m2!1sen!2sus"
+                width="100%"
+                height="320"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
           </div>
-        </div>
-
         </motion.aside>
       </div>
     </section>
@@ -352,8 +349,9 @@ function TextArea({
   );
 }
 
-function SliderField({
-  label, value, onChange, min, max, step, icon,
+/** Slider + manual number input */
+function DualNumberField({
+  label, value, onChange, min, max, step, icon, unit,
 }: {
   label: string;
   value: number;
@@ -362,29 +360,50 @@ function SliderField({
   max: number;
   step: number;
   icon?: React.ReactNode;
+  unit?: string;
 }) {
+  function handleTyped(input: string) {
+    // Remove commas or spaces, parse to number
+    const n = Number(input.replace(/[, ]/g, ""));
+    if (Number.isNaN(n)) return;
+    onChange(Math.min(max, Math.max(min, n)));
+  }
+
+  // Format with commas for display
+  const formattedValue = value.toLocaleString();
+
   return (
     <label className="block text-sm">
-      <div className="flex items-center gap-2 text-white/70">
-        {icon} <span>{label}</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-white/70">
+          {icon} <span>{label}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {unit && <span className="text-white/40 text-xs">{unit}</span>}
+          <input
+            type="text"
+            inputMode="numeric"
+            value={formattedValue}
+            onChange={(e) => handleTyped(e.target.value)}
+            className="w-28 rounded-md bg-[#0f0f0f] border border-white/10 px-2 py-1.5 text-right text-white
+                       focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
+          />
+        </div>
       </div>
-      <div className="mt-2 flex items-center gap-3">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full accent-[#c2a165]"
-        />
-        <span className="px-2 py-1 rounded bg-white/10 border border-white/10">
-          {value.toLocaleString()}
-        </span>
-      </div>
+
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-2 w-full accent-[#c2a165]"
+      />
     </label>
   );
 }
+
 
 function InfoCard({
   icon, title, body,
