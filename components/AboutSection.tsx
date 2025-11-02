@@ -83,18 +83,32 @@ export default function AboutSection() {
         </motion.div>
 
         {/* Core Values */}
-        <motion.div variants={child} className="space-y-6">
-          <SectionHeading
-            icon={<Gem size={24} className="text-[#c2a165]" />}
-            title="Core Values"
-            subtitle="The pillars that define how we operate and grow sustainably."
-          />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-            {PILLARS.map((p, i) => (
-              <Pillar key={p.title} index={i + 1} title={p.title} body={p.body} />
-            ))}
-          </div>
-        </motion.div>
+          <motion.div variants={child} className="space-y-6"> 
+            <SectionHeading icon={<Gem size={24} className="text-[#c2a165]" />} 
+            title="Core Values" subtitle="The pillars that define how we operate and grow sustainably." /> 
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 justify-items-cente"> 
+             {PILLARS.map((p, i) => (
+                <div
+                  key={p.title}
+                  className={`w-full max-w-[320px] ${
+                    i === 4 ? "col-span-2 justify-self-center sm:col-span-1" : ""
+                  }`}
+                >
+                  <div
+                    className="
+                      h-full rounded-2xl border border-white/10 bg-[#121212]/80
+                      p-5 text-center transition-transform duration-300
+                      md:hover:scale-[1.03] md:hover:shadow-[0_0_40px_rgba(194,161,101,0.25)]
+                      md:hover:border-[#c2a165]
+                    "
+                  >
+                    <Pillar index={i + 1} title={p.title} body={p.body} />
+                  </div>
+                </div>
+              ))}
+               </div>
+         </motion.div>
+
          <motion.div
           variants={child}
           className="relative h-56 rounded-2xl overflow-hidden border border-white/10 shadow-lg"
