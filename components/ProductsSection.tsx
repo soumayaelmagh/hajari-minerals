@@ -28,7 +28,7 @@ const PRODUCTS: Product[] = [
     grade: "Fe 58–64%+",
     minOrderMt: 25,
   },
-   {
+  {
     slug: "iron-ore-m",
     name: "Iron Ore (Magnetite)",
     category: "Ferrous",
@@ -61,7 +61,7 @@ const PRODUCTS: Product[] = [
     grade: "WO3 20–50%",
     minOrderMt: 25,
   },
-   {
+  {
     slug: "tungsten-ore-w",
     name: "Tungsten Ore (Wolframite)",
     category: "Alloys",
@@ -105,7 +105,7 @@ const PRODUCTS: Product[] = [
     grade: "Industrial",
     minOrderMt: 25,
   },
-   {
+  {
     slug: "mica-p",
     name: "Mica (Phlogopite)",
     category: "Non-metallic",
@@ -184,14 +184,13 @@ const PRODUCTS: Product[] = [
   },
 ];
 
-/** ---------------------------------------------
- * Component
- * --------------------------------------------- */
 export default function ProductsSection() {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<"All" | "Ferrous" | "Alloys" | "Non-metallic">("All");
-  const [quoteProduct, setQuoteProduct] = useState<{slug:string; name:string} | null>(null);
- 
+  const [category, setCategory] =
+    useState<"All" | "Ferrous" | "Alloys" | "Non-metallic">("All");
+  const [quoteProduct, setQuoteProduct] =
+    useState<{ slug: string; name: string } | null>(null);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return PRODUCTS.filter((p) => {
@@ -216,8 +215,8 @@ export default function ProductsSection() {
               Products <span className="text-[#c2a165]">we supply</span>
             </h2>
             <p className="text-white/75 mt-2 max-w-2xl">
-              Verified specs, disciplined operations, and shipment via Port Sudan under{" "}
-              <strong>FOB</strong> or <strong>CIF</strong> per client request.
+              Verified specs, disciplined operations, and shipment via Port Sudan
+              under <strong>FOB</strong> or <strong>CIF</strong> per client request.
             </p>
           </div>
 
@@ -248,19 +247,20 @@ export default function ProductsSection() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Grid (looser viewport trigger + base grid-cols-1) */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: true, amount: 0.08, margin: "0px 0px -20% 0px" }}
           transition={{ duration: 0.5 }}
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {filtered.map((p) => (
             <article
               key={p.slug}
               className="group rounded-2xl overflow-hidden bg-[#141414]/90 border border-white/10 hover:border-[#c2a165] transition"
             >
+              {/* Image: fixed height on mobile */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={p.image}
@@ -268,7 +268,9 @@ export default function ProductsSection() {
                 className="h-48 w-full object-cover"
                 loading="lazy"
               />
-              <div className="p-5 space-y-3">
+
+              {/* Content: visible by default on mobile, hover-reveal on desktop */}
+              <div className="p-5 space-y-3 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-lg font-semibold">{p.name}</h3>
                   <span className="text-xs px-2 py-1 rounded bg-white/10 border border-white/10">
@@ -278,7 +280,6 @@ export default function ProductsSection() {
 
                 <p className="text-white/70 text-sm">{p.summary}</p>
 
-                {/* Specs / tags */}
                 {!!p.specs?.length && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {p.specs.slice(0, 3).map((s, i) => (
@@ -293,7 +294,11 @@ export default function ProductsSection() {
                 )}
 
                 <div className="flex items-center gap-3 text-xs text-white/60 pt-1">
-                  {p.grade && <span>Grade: <b className="text-white/80">{p.grade}</b></span>}
+                  {p.grade && (
+                    <span>
+                      Grade: <b className="text-white/80">{p.grade}</b>
+                    </span>
+                  )}
                   {p.minOrderMt && (
                     <span className="ml-auto">
                       MOQ: <b className="text-white/80">{p.minOrderMt} mt</b>
@@ -301,10 +306,11 @@ export default function ProductsSection() {
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="pt-3 flex gap-3">
                   <button
-                    onClick={() => setQuoteProduct({ slug: p.slug, name: p.name })}
+                    onClick={() =>
+                      setQuoteProduct({ slug: p.slug, name: p.name })
+                    }
                     className="px-4 py-2 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition"
                   >
                     Request Quote
@@ -321,7 +327,6 @@ export default function ProductsSection() {
           ))}
         </motion.div>
 
-        {/* Empty state */}
         {filtered.length === 0 && (
           <div className="text-center text-white/60 mt-16">
             No products matched your search.
@@ -329,13 +334,11 @@ export default function ProductsSection() {
         )}
       </div>
 
-      {/* Modal */}
-     <RequestQuoteModal
-      open={!!quoteProduct}
-      product={quoteProduct}
-      onClose={() => setQuoteProduct(null)}
-    />
-
+      <RequestQuoteModal
+        open={!!quoteProduct}
+        product={quoteProduct}
+        onClose={() => setQuoteProduct(null)}
+      />
     </section>
   );
 }

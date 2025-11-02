@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function Header() {
+  const pathname = usePathname();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const pathname = usePathname();
-
-  const toggleMenu = () => setMenuOpen(!menuOpen);
 
   const links = [
     { name: "Home", path: "/" },
@@ -22,38 +22,38 @@ export default function Header() {
     { name: "Contact", path: "/contact" },
   ];
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (p: string) => pathname === p;
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      setScrolled(currentScrollY > 20);
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
-
-      setLastScrollY(currentScrollY);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 20);
+      setHidden(y > lastScrollY && y > 100);
+      setLastScrollY(y);
     };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, [lastScrollY]);
+
+  // Close mobile menu when navigating
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transform transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transform transition-all duration-500 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       } ${
-        scrolled
+         menuOpen
+        ? "bg-black border-b border-white/10"     
+        :scrolled
           ? "bg-bgDark border-b border-white/10 shadow-md"
           : "bg-bgDark/70 backdrop-blur-md border-b border-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.png"
@@ -65,51 +65,71 @@ export default function Header() {
           />
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop nav */}
         <nav className="hidden md:flex gap-8 text-base">
-          {links.map((link) => (
+          {links.map((l) => (
             <Link
-              key={link.name}
-              href={link.path}
+              key={l.path}
+              href={l.path}
               className={`transition font-semibold ${
-                isActive(link.path)
+                isActive(l.path)
                   ? "text-[#c2a165] border-b-2 border-[#c2a165]"
                   : "text-white/80 hover:text-white"
               }`}
             >
-              {link.name}
+              {l.name}
             </Link>
           ))}
         </nav>
 
-        {/* Mobile Menu Button */}
+        {/* Mobile toggle */}
         <button
-          onClick={toggleMenu}
-          className="md:hidden text-white focus:outline-none"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="md:hidden text-white focus:outline-none text-2xl"
+          aria-label="Toggle menu"
+          aria-expanded={menuOpen}
         >
           {menuOpen ? "✕" : "☰"}
         </button>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <div className="absolute top-full left-0 w-full bg-bgDark border-t border-white/10 flex flex-col text-center md:hidden">
-            {links.map((link) => (
-              <Link
-                key={link.name}
-                href={link.path}
-                onClick={() => setMenuOpen(false)}
-                className={`py-3 border-b border-white/5 transition font-semibold ${
-                  isActive(link.path)
-                    ? "text-[#c2a165] bg-white/5"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Mobile overlay menu */}
+     <AnimatePresence>
+  {menuOpen && (
+    <motion.nav
+      id="mobile-menu"
+      initial={{ opacity: 0, y:0 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.25, ease: [0.25, 1, 0.3, 1] }}
+     className="
+        fixed left-0 right-0 bottom-0 
+        top-30  
+        bg-black md:hidden flex flex-col text-center shadow-xl z-50
+      "
+    >
+      <ul className="divide-y divide-white/10">
+        {links.map((l) => (
+          <li key={l.path}>
+            <Link
+              href={l.path}
+              onClick={() => setMenuOpen(false)}
+              className={`block px-6 py-4 text-lg font-semibold transition
+                bg-black hover:bg-[#111] // <- this line ensures each item is black
+                ${
+                  isActive(l.path)
+                    ? "text-[#c2a165]"
+                    : "text-white/90 hover:text-[#c2a165]"
+                }`}
+            >
+              {l.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </motion.nav>
+  )}
+</AnimatePresence>
     </header>
   );
 }
