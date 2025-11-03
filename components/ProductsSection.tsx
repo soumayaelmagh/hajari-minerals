@@ -270,7 +270,7 @@ export default function ProductsSection() {
               />
 
               {/* Content: visible by default on mobile, hover-reveal on desktop */}
-              <div className="p-5 space-y-3 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+             <div className="p-5 space-y-3 text-white transition-transform duration-200 md:group-hover:-translate-y-0.5">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-lg font-semibold">{p.name}</h3>
                   <span className="text-xs px-2 py-1 rounded bg-white/10 border border-white/10">
