@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Mail, CheckCircle2, TriangleAlert } from "lucide-react";
+import { X, Mail, CheckCircle2, TriangleAlert, AlertTriangle } from "lucide-react";
 
 type RequestQuoteModalProps = {
   open: boolean;
@@ -26,7 +26,7 @@ export default function RequestQuoteModal({
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
-  const [volume, setVolume] = useState<number>(200);
+  const [volume, setVolume] = useState<number>(25);
   const [destination, setDestination] = useState("");
   const [incoterm, setIncoterm] = useState<"FOB" | "CIF">("FOB");
   const [message, setMessage] = useState("");
@@ -127,8 +127,10 @@ export default function RequestQuoteModal({
         onClose();
       }, autoCloseMs);
 
-      // clear on unmount or reopen
-      return () => window.clearTimeout(timer);
+      // Clear timer if component unmounts before it fires
+      const clear = () => window.clearTimeout(timer);
+      window.addEventListener("beforeunload", clear, { once: true });
+      setTimeout(() => window.removeEventListener("beforeunload", clear), autoCloseMs + 1000);
     } catch (e: any) {
       setSent("err");
       setErrorMsg(e?.message || "Network error");
@@ -166,13 +168,27 @@ export default function RequestQuoteModal({
           <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
 
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field
-              label="Estimated volume (mt)"
-              value={String(volume)}
-              onChange={(v) => setVolume(Number(v) || 0)}
-              type="number"
-              placeholder="200"
-            />
+            {/* Volume with soft warning if < 25 */}
+            <label className="block text-sm">
+              <span className="text-white/70 flex items-center justify-between">
+                <span>Estimated volume (mt)</span>
+                {Number(volume) < 25 && (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-yellow-400 font-medium">
+                    <AlertTriangle size={14} /> Minimum recommended: 25 mt
+                  </span>
+                )}
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={Number.isFinite(volume) ? volume : 0}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                placeholder="25"
+                className="mt-2 w-full rounded-lg bg-[#0f0f0f] border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
+              />
+            </label>
+
             <Field
               label="Destination (city, country)"
               value={destination}
@@ -191,7 +207,6 @@ export default function RequestQuoteModal({
                 { label: "CIF", value: "CIF" },
               ]}
             />
-
             {/* Static info since channel is email-only */}
             <div className="text-sm text-white/60 self-end">
               Preferred contact method:{" "}
@@ -225,16 +240,19 @@ export default function RequestQuoteModal({
             </button>
           </div>
 
-          {sent === "ok" && (
-            <p className="mt-1 text-green-400 text-sm inline-flex items-center gap-2">
-              <CheckCircle2 size={16}/> Thanks! Your quote request was sent.
-            </p>
-          )}
-          {sent === "err" && (
-            <p className="mt-1 text-red-400 text-sm inline-flex items-center gap-2">
-              <TriangleAlert size={16}/> Couldn’t send. {errorMsg}
-            </p>
-          )}
+          {/* feedback */}
+          <div aria-live="polite">
+            {sent === "ok" && (
+              <p className="mt-1 text-green-400 text-sm inline-flex items-center gap-2">
+                <CheckCircle2 size={16}/> Thanks! Your quote request was sent.
+              </p>
+            )}
+            {sent === "err" && (
+              <p className="mt-1 text-red-400 text-sm inline-flex items-center gap-2">
+                <TriangleAlert size={16}/> Couldn’t send. {errorMsg}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -255,7 +273,7 @@ export default function RequestQuoteModal({
 
 /* ---------------- helpers & inputs ---------------- */
 
-function honeypotFilled(ref: React.MutableRefObject<HTMLInputElement | null>) {
+function honeypotFilled(ref: React.RefObject<HTMLInputElement | null>) {
   return !!ref.current?.value;
 }
 
