@@ -30,7 +30,7 @@ export default function ContactSection() {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
 
-  // sliders + manual numeric inputs
+  // volume is *soft-min* (warning if <25), budget is clamped
   const [volume, setVolume] = useState<number>(25);
   const [budget, setBudget] = useState<number>(200_000);
 
@@ -89,7 +89,7 @@ export default function ContactSection() {
       setSent("ok");
       // Optional reset
       // setName(""); setCompany(""); setEmail(""); setMessage("");
-      // setVolume(500); setBudget(200000); setTopic("general");
+      // setVolume(25); setBudget(200000); setTopic("general");
     } catch (e: any) {
       setSent("err");
       setErrorMsg(e?.message || "Network error");
@@ -156,16 +156,11 @@ export default function ContactSection() {
             </div>
             <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
 
-            {/* Sliders + manual inputs */}
+            {/* Volume (soft min) + Budget (clamped) */}
             <div className="grid md:grid-cols-2 gap-6">
-              <DualNumberField
-                label="Estimated monthly volume (metric tons)"
+              <VolumeField
                 value={volume}
                 onChange={setVolume}
-                min={25}
-                max={10000}
-                step={25}
-                unit="mt"
               />
               <DualNumberField
                 label="Estimated budget (USD)"
@@ -263,7 +258,6 @@ export default function ContactSection() {
                   <li>Atayib Salih Street, Manshiya, Khartoum, Sudan.</li>
                   <li>Hai Al Matar, portsudan, Sudan</li> 
                  </ul>}
-
             />
             <InfoCard
               icon={<Clock4 className="text-[#c2a165]" size={22} />}
@@ -349,7 +343,63 @@ function TextArea({
   );
 }
 
-/** Slider + manual number input */
+/** ---- Volume field: allows any non-negative number + soft warning if < 25 ---- */
+function VolumeField({
+  value, onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const SOFT_MIN = 25;   // warning threshold
+  const SLIDER_MIN = 0;  // slider lower bound
+  const SLIDER_MAX = 10000;
+
+  const formatted = Number.isFinite(value) ? value.toLocaleString() : "0";
+
+  return (
+    <label className="block text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-white/70">
+          <span>Estimated monthly volume (metric tons)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-white/40 text-xs">mt</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={formatted}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[, ]/g, "");
+              const n = Number(raw);
+              onChange(Number.isFinite(n) && n >= 0 ? n : 0);
+            }}
+            className={`w-28 rounded-md bg-[#0f0f0f] border px-2 py-1.5 text-right text-white focus:outline-none focus:ring-2
+              ${value < SOFT_MIN ? "border-[#a97755]/60 focus:ring-[#a97755]/60" : "border-white/10 focus:ring-[#c2a165]/60"}`}
+          />
+        </div>
+      </div>
+
+      <input
+        type="range"
+        min={SLIDER_MIN}
+        max={SLIDER_MAX}
+        step={25}
+        value={Number.isFinite(value) ? value : 0}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-2 w-full accent-[#c2a165]"
+      />
+
+      {value < SOFT_MIN && (
+        <p className="mt-2 text-xs text-amber-300/90 inline-flex items-center gap-2">
+          <TriangleAlert size={14} />
+          Typical MOQ is <b className="text-amber-200">25&nbsp;mt</b>, but smaller trial quantities are welcome.
+        </p>
+      )}
+    </label>
+  );
+}
+
+/** ---- Slider + manual number input (clamped) ---- */
 function DualNumberField({
   label, value, onChange, min, max, step, icon, unit,
 }: {
@@ -363,13 +413,11 @@ function DualNumberField({
   unit?: string;
 }) {
   function handleTyped(input: string) {
-    // Remove commas or spaces, parse to number
     const n = Number(input.replace(/[, ]/g, ""));
     if (Number.isNaN(n)) return;
     onChange(Math.min(max, Math.max(min, n)));
   }
 
-  // Format with commas for display
   const formattedValue = value.toLocaleString();
 
   return (
@@ -403,7 +451,6 @@ function DualNumberField({
     </label>
   );
 }
-
 
 function InfoCard({
   icon, title, body,
