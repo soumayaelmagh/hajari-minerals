@@ -538,38 +538,44 @@ function FormActions({
  * PROCESS FLOW COMPONENT
  ****************************************/
 function ProcessFlowCard() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   const STEPS = [
     {
       title: "Inquiry & Specification",
       desc:
-        "Clients share their mineral requirements, preferred grade, and processing level. Our team reviews specifications and confirms availability from our production sites.",
+        "Share mineral requirements, preferred grade, and processing level. We'll confirm availability.",
     },
     {
       title: "Quotation & Agreement",
       desc:
-        "We issue a detailed quotation covering product specifications, delivery terms, and pricing. Once both sides agree, a supply contract is signed under internationally recognized trade terms.",
+        "A detailed quotation is issued and a supply contract is signed under global trade terms.",
     },
     {
       title: "Sampling & Quality Verification",
       desc:
-        "Before shipment, we conduct testing to confirm product quality. Samples can be provided for client review or independent verification prior to final order confirmation.",
+        "Samples can be provided before order confirmation — client or independent inspection.",
     },
     {
       title: "Logistics & Export Preparation",
       desc:
-        "Our operations team handles transport to Port Sudan and prepares all required export documentation in line with international standards.",
+        "Materials transported to Port Sudan; export documentation prepared per standards.",
     },
     {
       title: "Delivery Options",
       desc:
-        "We offer flexible delivery terms. Clients may choose FOB Port Sudan or CIF to destination port, depending on their logistics preference.",
+        "FOB Port Sudan or CIF destination port, based on logistics preference.",
     },
     {
       title: "Payment & After-Sales",
       desc:
-        "Payment follows the agreed contract terms. We maintain transparent communication from order to delivery to ensure a smooth and reliable experience.",
+        "Transparent communication from order to delivery; after-sales support included.",
     },
   ];
+
+  function toggle(i: number) {
+    setOpenIndex((prev) => (prev === i ? null : i));
+  }
 
   return (
     <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-5">
@@ -579,32 +585,53 @@ function ProcessFlowCard() {
       </div>
 
       <div className="space-y-3">
-        {STEPS.map((step, i) => (
-          <div
-            key={i}
-            className="group border border-white/10 rounded-xl p-4 transition hover:border-[#c2a165] cursor-pointer"
-          >
-            <div className="text-white font-medium flex items-center gap-2">
-              <span className="text-[#c2a165]">{i + 1}.</span>
-              {step.title}
-            </div>
+        {STEPS.map((step, i) => {
+          const isOpen = openIndex === i;
 
+          return (
             <div
-              className="
-                max-h-0 overflow-hidden opacity-0
-                group-hover:max-h-40 group-hover:opacity-100
-                transition-all duration-300 ease-in-out
-              "
+              key={i}
+              className={`
+                group border border-white/10 rounded-xl p-4 transition cursor-pointer
+                hover:border-[#c2a165]
+              `}
+              onClick={() => toggle(i)}
             >
-              <p className="text-white/70 text-sm mt-2">{step.desc}</p>
+              {/* Title row */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-white font-medium">
+                  <span className="text-[#c2a165]">{i + 1}.</span>
+                  {step.title}
+                </div>
+
+                <div
+                  className={`
+                    text-[#c2a165] transition-transform
+                    ${isOpen ? "rotate-90" : ""}
+                  `}
+                >
+                  ▸
+                </div>
+              </div>
+
+              {/* Content: visible on hover (desktop) OR when open (mobile) */}
+              <div
+                className={`
+                  text-white/70 text-sm mt-2
+                  overflow-hidden transition-all duration-300 ease-in-out
+                  ${isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"}
+                  group-hover:max-h-40 group-hover:opacity-100
+                `}
+              >
+                {step.desc}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
-
 /****************************************
  * BASIC CARD
  ****************************************/
