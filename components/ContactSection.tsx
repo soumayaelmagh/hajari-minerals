@@ -530,9 +530,6 @@ function FormActions({
         </p>
       )}
 
-      <p className="text-xs text-white/50 flex items-center gap-2">
-        <Paperclip size={14} /> Attach technical documents in your reply email, if needed.
-      </p>
     </>
   );
 }
