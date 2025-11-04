@@ -232,11 +232,6 @@ export default function ContactSection() {
                 <TriangleAlert size={16} /> Couldn’t send. {errorMsg}
               </p>
             )}
-
-            {/* Attachment note */}
-            <p className="text-xs text-white/50 flex items-center gap-2">
-              <Paperclip size={14} /> Attach technical documents in your reply email, if needed.
-            </p>
           </div>
         </motion.div>
 

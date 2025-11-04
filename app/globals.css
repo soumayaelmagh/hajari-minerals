@@ -52,3 +52,13 @@ body {
   z-index: 1;
 }
 
+/* Ensure full-height and no white flash on overscroll */
+html, body, #__next, #root {
+  height: 100%;
+  background: #0b0b0b;
+}
+
+/* iOS safe-area helpers for full-bleed headers/footers */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+
