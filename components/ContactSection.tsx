@@ -554,7 +554,7 @@ function ProcessFlowCard() {
     {
       title: "Sampling & Quality Verification",
       desc:
-        "Samples can be provided before order confirmation — client or independent inspection.",
+        "Samples can be provided before order confirmation, client or independent inspection.",
     },
     {
       title: "Logistics & Export Preparation",
