@@ -3,11 +3,19 @@
 import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Mail, BadgeDollarSign, PackageOpen,
-  Clock4, MapPin, Paperclip, CheckCircle2, TriangleAlert
+  Mail,
+  BadgeDollarSign,
+  PackageOpen,
+  Clock4,
+  MapPin,
+  Paperclip,
+  CheckCircle2,
+  TriangleAlert,
 } from "lucide-react";
 
-/** ---------- Config ---------- */
+/****************************************
+ * PRODUCT OPTIONS
+ ****************************************/
 const PRODUCT_OPTIONS = [
   { label: "General enquiry", value: "general" },
   { label: "Iron Ore (Hematite / Magnetite)", value: "iron-ore" },
@@ -23,38 +31,39 @@ const PRODUCT_OPTIONS = [
   { label: "Quartz / Silica", value: "quartz" },
 ];
 
+/****************************************
+ * MAIN CONTACT COMPONENT
+ ****************************************/
 export default function ContactSection() {
-  // core fields
   const [topic, setTopic] = useState("general");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
 
-  // volume is *soft-min* (warning if <25), budget is clamped
+  // Soft-min volume warning
   const [volume, setVolume] = useState<number>(25);
   const [budget, setBudget] = useState<number>(200_000);
 
   const [message, setMessage] = useState("");
-
-  // fixed channel: email only
-  const channel: "email" = "email";
-
-  // UX states
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState<null | "ok" | "err">(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // anti-spam honeypot
+  // honeypot
   const honeyRef = useRef<HTMLInputElement>(null);
 
+  // form validation
   const canSend = useMemo(() => {
     const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     return name.trim().length > 1 && okEmail && message.trim().length > 3;
   }, [name, email, message]);
 
+  /****************************************
+   * SUBMIT HANDLER
+   ****************************************/
   async function submitContact() {
     if (!canSend || isSending) return;
-    if (honeyRef.current?.value) return; // bot
+    if (honeyRef.current?.value) return; // bot trap
 
     setIsSending(true);
     setSent(null);
@@ -75,7 +84,7 @@ export default function ContactSection() {
           message,
           incoterm: "FOB",
           destination: "",
-          channel, // always "email"
+          channel: "email",
         }),
       });
 
@@ -87,9 +96,6 @@ export default function ContactSection() {
       }
 
       setSent("ok");
-      // Optional reset
-      // setName(""); setCompany(""); setEmail(""); setMessage("");
-      // setVolume(25); setBudget(200000); setTopic("general");
     } catch (e: any) {
       setSent("err");
       setErrorMsg(e?.message || "Network error");
@@ -98,12 +104,15 @@ export default function ContactSection() {
     }
   }
 
+  /****************************************
+   * RENDER
+   ****************************************/
   return (
     <section className="relative w-full bg-[#0b0b0b] text-white py-24 px-6 md:px-12 lg:px-24 border-t border-white/10">
       <div className="absolute inset-0 opacity-10 bg-[url('/textures/gold-dust.webp')] bg-cover bg-center pointer-events-none" />
-      <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-14">
 
-        {/* LEFT: Conversational form */}
+      <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-14">
+        {/* LEFT FORM */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -111,131 +120,35 @@ export default function ContactSection() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-8"
         >
-          <div className="space-y-3">
-            <h2 className="text-3xl md:text-5xl font-semibold">
-              Connect <span className="text-[#c2a165]">with Our Team</span>
-            </h2>
-            <p className="text-white/75 max-w-2xl">
-              Share your specs, target schedule, and preferences. We’ll align sampling and shipment
-              terms (FOB/CIF) and reply with actionable next steps.
-            </p>
-          </div>
+          <HeaderText />
 
-          {/* Topic chips */}
-          <div className="flex flex-wrap gap-2">
-            {PRODUCT_OPTIONS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setTopic(p.value)}
-                className={`px-3 py-1.5 rounded-full border text-sm transition ${
-                  topic === p.value
-                    ? "bg-[#c2a165] text-black border-[#c2a165]"
-                    : "border-white/20 text-white/80 hover:border-white/50"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
+          <TopicSelector topic={topic} setTopic={setTopic} />
 
-          {/* Form card */}
-          <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-6 space-y-6">
-            {/* Honeypot */}
-            <input
-              ref={honeyRef}
-              type="text"
-              className="hidden"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-            />
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <Field label="Your name" value={name} onChange={setName} placeholder="Jane Doe" />
-              <Field label="Company" value={company} onChange={setCompany} placeholder="Acme Metals Ltd." />
-            </div>
-            <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
-
-            {/* Volume (soft min) + Budget (clamped) */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <VolumeField
-                value={volume}
-                onChange={setVolume}
-              />
-              <DualNumberField
-                label="Estimated budget (USD)"
-                value={budget}
-                onChange={setBudget}
-                min={10_000}
-                max={1_000_000}
-                step={10_000}
-                icon={<BadgeDollarSign size={16} className="text-[#c2a165]" />}
-                unit="$"
-              />
-            </div>
-
-            <TextArea
-              label="What should we know?"
-              value={message}
-              onChange={setMessage}
-              placeholder="Share grade/purity targets, sizing, timeline, inspection requirements…"
-            />
-
-            {/* Preferred channel (email only) */}
-            <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
-              <span>Preferred contact method:</span>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c2a165] bg-[#c2a165] text-black">
-                <Mail size={16} /> Email
-              </span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                onClick={submitContact}
-                disabled={!canSend || isSending}
-                className={`px-5 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition
-                  ${!canSend || isSending
-                    ? "bg-[#c2a165]/50 text-black/70 cursor-not-allowed"
-                    : "bg-[#c2a165] text-black hover:bg-[#a98755]"}`}
-              >
-                {isSending ? "Sending…" : <> <Mail size={18} /> Send enquiry </>}
-              </button>
-
-              <a
-                href="/products"
-                className="px-5 py-3 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition inline-flex items-center gap-2"
-              >
-                <PackageOpen size={18} /> View products
-              </a>
-
-              <button
-                onClick={() => {
-                  setName(""); setCompany(""); setEmail(""); setMessage("");
-                  setVolume(25); setBudget(200000); setTopic("general");
-                  setSent(null); setErrorMsg("");
-                }}
-                className="px-5 py-3 rounded-lg border border-[#c2a165]/50 text-white hover:bg-[#c2a165] hover:text-black transition"
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Feedback */}
-            {sent === "ok" && (
-              <p className="mt-3 text-green-400 text-sm inline-flex items-center gap-2">
-                <CheckCircle2 size={16} /> Thanks! Your request was sent. We’ll reply shortly.
-              </p>
-            )}
-            {sent === "err" && (
-              <p className="mt-3 text-red-400 text-sm inline-flex items-center gap-2">
-                <TriangleAlert size={16} /> Couldn’t send. {errorMsg}
-              </p>
-            )}
-          </div>
+          <FormCard
+            honeyRef={honeyRef}
+            name={name}
+            company={company}
+            email={email}
+            message={message}
+            volume={volume}
+            budget={budget}
+            setName={setName}
+            setCompany={setCompany}
+            setEmail={setEmail}
+            setMessage={setMessage}
+            setVolume={setVolume}
+            setBudget={setBudget}
+            submitContact={submitContact}
+            canSend={canSend}
+            isSending={isSending}
+            sent={sent}
+            errorMsg={errorMsg}
+            setSent={setSent}
+            setErrorMsg={setErrorMsg}
+          />
         </motion.div>
 
-        {/* RIGHT: Quick info / timeline */}
+        {/* RIGHT INFO */}
         <motion.aside
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -243,65 +156,170 @@ export default function ContactSection() {
           transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-6"
         >
+          {/* Logistics + Process Flow */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
             <InfoCard
               icon={<MapPin className="text-[#c2a165]" size={22} />}
               title="Logistics"
               body={
-                 <ul className="list-inside space-y-1 text-white/75 text-sm">
+                <ul className="list-inside space-y-1 text-white/75 text-sm">
                   <li>Shipments coordinated via Port Sudan under FOB/CIF.</li>
-                  <li>Atayib Salih Street, Manshiya, Khartoum, Sudan.</li>
-                  <li>Hai Al Matar, portsudan, Sudan</li> 
-                 </ul>}
-            />
-            <InfoCard
-              icon={<Clock4 className="text-[#c2a165]" size={22} />}
-              title="Process flow"
-              body={
-                <ol className="list-decimal list-inside space-y-1 text-white/75 text-sm">
-                  <li>Inquiry and Specification: Clients share their mineral requirements, preferred grade, and processing level. Our team reviews specifications and confirms availability from our production sites.</li>
-                  <li>Quotation and Agreement: We issue a detailed quotation covering product specifications, delivery terms, and pricing. Once both sides agree, a supply contract is signed under internationally recognized trade terms.</li>
-                  <li>Sampling and Quality Verification: Before shipment, we conduct testing to confirm product quality. Samples can be provided for client review or independent verification prior to final order confirmation.</li>
-                  <li>Logistics and Export Preparation: Our operations team handles transport to Port Sudan and prepares all required export documentation in line with international standards.</li>
-                  <li>Delivery Options: We offer flexible delivery terms. Clients may choose FOB Port Sudan or CIF to destination port, depending on their logistics preference.</li>
-                  <li>Payment and After-Sales Support: Payment follows the agreed contract terms. We maintain transparent communication from order to delivery to ensure a smooth and reliable experience.</li>
-                </ol>
+                  <li>Atayib Salih Street, Manshiya, Khartoum.</li>
+                  <li>Hai Al Matar, Port Sudan.</li>
+                </ul>
               }
             />
+
+            <ProcessFlowCard />
           </div>
 
-          {/* Slim map banner */}
-          <div className="mt-8 p-0.5 rounded-xl bg-linear-to-r from-[#c2a165]/30 to-transparent">
-            <div className="rounded-xl overflow-hidden border border-white/10 shadow-lg">
-              <iframe
-                title="Port Sudan Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3495.085195141776!2d37.21036301509894!3d19.61633824142044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x16931f0073c4e1ad%3A0x2545a5012634eebc!2sPort%20Sudan%2C%20Sudan!5e0!3m2!1sen!2sus!4v1705250000000!5m2!1sen!2sus"
-                width="100%"
-                height="320"
-                style={{ border: 0 }}
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
-            </div>
-          </div>
+          {/* MAP */}
+          <MapBlock />
         </motion.aside>
       </div>
     </section>
   );
 }
 
-/* ---------------- small subcomponents ---------------- */
+/****************************************
+ * SUB COMPONENTS
+ ****************************************/
 
-function Field({
-  label, value, onChange, placeholder, type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
-}) {
+function HeaderText() {
+  return (
+    <div className="space-y-3">
+      <h2 className="text-3xl md:text-5xl font-semibold">
+        Connect <span className="text-[#c2a165]">with Our Team</span>
+      </h2>
+      <p className="text-white/75 max-w-2xl">
+        Share your specs, schedule, and preferences. We’ll align sampling and shipment
+        terms (FOB/CIF) and reply with actionable next steps.
+      </p>
+    </div>
+  );
+}
+
+function TopicSelector({ topic, setTopic }: any) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {PRODUCT_OPTIONS.map((p) => (
+        <button
+          key={p.value}
+          onClick={() => setTopic(p.value)}
+          className={`px-3 py-1.5 rounded-full border text-sm transition ${
+            topic === p.value
+              ? "bg-[#c2a165] text-black border-[#c2a165]"
+              : "border-white/20 text-white/80 hover:border-white/50"
+          }`}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** ---------- FORM CARD ---------- */
+function FormCard({
+  honeyRef,
+  name,
+  company,
+  email,
+  message,
+  volume,
+  budget,
+  setName,
+  setCompany,
+  setEmail,
+  setMessage,
+  setVolume,
+  setBudget,
+  submitContact,
+  canSend,
+  isSending,
+  sent,
+  errorMsg,
+  setSent,
+  setErrorMsg,
+}: any) {
+  return (
+    <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-6 space-y-6">
+      {/* Honeypot */}
+      <input
+        ref={honeyRef}
+        type="text"
+        className="hidden"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field label="Your name" value={name} onChange={setName} placeholder="Jane Doe" />
+        <Field
+          label="Company"
+          value={company}
+          onChange={setCompany}
+          placeholder="Acme Metals Ltd."
+        />
+      </div>
+
+      <Field
+        label="Email"
+        value={email}
+        onChange={setEmail}
+        type="email"
+        placeholder="you@email.com"
+      />
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <VolumeField value={volume} onChange={setVolume} />
+        <DualNumberField
+          label="Estimated budget (USD)"
+          value={budget}
+          onChange={setBudget}
+          min={10_000}
+          max={1_000_000}
+          step={10_000}
+          icon={<BadgeDollarSign size={16} className="text-[#c2a165]" />}
+          unit="$"
+        />
+      </div>
+
+      <TextArea
+        label="What should we know?"
+        value={message}
+        onChange={setMessage}
+        placeholder="Share grade/purity targets, sizing, timeline, inspection requirements…"
+      />
+
+      <PreferredChannel />
+
+      <FormActions
+        submitContact={submitContact}
+        canSend={canSend}
+        isSending={isSending}
+        sent={sent}
+        errorMsg={errorMsg}
+        setSent={setSent}
+        setErrorMsg={setErrorMsg}
+        setName={setName}
+        setCompany={setCompany}
+        setEmail={setEmail}
+        setMessage={setMessage}
+        setVolume={setVolume}
+        setBudget={setBudget}
+        setTopic={(v: string) => {}}
+      />
+    </div>
+  );
+}
+
+/****************************************
+ * Field Components
+ ****************************************/
+
+function Field({ label, value, onChange, placeholder, type = "text" }: any) {
   return (
     <label className="block text-sm">
       <span className="text-white/70">{label}</span>
@@ -316,14 +334,7 @@ function Field({
   );
 }
 
-function TextArea({
-  label, value, onChange, placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
+function TextArea({ label, value, onChange, placeholder }: any) {
   return (
     <label className="block text-sm">
       <span className="text-white/70">{label}</span>
@@ -338,24 +349,18 @@ function TextArea({
   );
 }
 
-/** ---- Volume field: allows any non-negative number + soft warning if < 25 ---- */
-function VolumeField({
-  value, onChange,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  const SOFT_MIN = 25;   // warning threshold
-  const SLIDER_MIN = 0;  // slider lower bound
+/** ---- Volume with soft warning ---- */
+function VolumeField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const SOFT_MIN = 25;
+  const SLIDER_MIN = 0;
   const SLIDER_MAX = 10000;
-
   const formatted = Number.isFinite(value) ? value.toLocaleString() : "0";
 
   return (
     <label className="block text-sm">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-white/70">
-          <span>Estimated monthly volume (metric tons)</span>
+          Estimated monthly volume (metric tons)
         </div>
         <div className="flex items-center gap-2">
           <span className="text-white/40 text-xs">mt</span>
@@ -369,7 +374,11 @@ function VolumeField({
               onChange(Number.isFinite(n) && n >= 0 ? n : 0);
             }}
             className={`w-28 rounded-md bg-[#0f0f0f] border px-2 py-1.5 text-right text-white focus:outline-none focus:ring-2
-              ${value < SOFT_MIN ? "border-[#a97755]/60 focus:ring-[#a97755]/60" : "border-white/10 focus:ring-[#c2a165]/60"}`}
+              ${
+                value < SOFT_MIN
+                  ? "border-[#a97755]/60 focus:ring-[#a97755]/60"
+                  : "border-white/10 focus:ring-[#c2a165]/60"
+              }`}
           />
         </div>
       </div>
@@ -387,26 +396,15 @@ function VolumeField({
       {value < SOFT_MIN && (
         <p className="mt-2 text-xs text-amber-300/90 inline-flex items-center gap-2">
           <TriangleAlert size={14} />
-          Typical MOQ is <b className="text-amber-200">25&nbsp;mt</b>, but smaller trial quantities are welcome.
+          Typical MOQ is <b className="text-amber-200">25 mt</b>, but smaller trials are welcome.
         </p>
       )}
     </label>
   );
 }
 
-/** ---- Slider + manual number input (clamped) ---- */
-function DualNumberField({
-  label, value, onChange, min, max, step, icon, unit,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  min: number;
-  max: number;
-  step: number;
-  icon?: React.ReactNode;
-  unit?: string;
-}) {
+/** ---- Slider + manual input (budget) ---- */
+function DualNumberField({ label, value, onChange, min, max, step, icon, unit }: any) {
   function handleTyped(input: string) {
     const n = Number(input.replace(/[, ]/g, ""));
     if (Number.isNaN(n)) return;
@@ -429,7 +427,7 @@ function DualNumberField({
             value={formattedValue}
             onChange={(e) => handleTyped(e.target.value)}
             className="w-28 rounded-md bg-[#0f0f0f] border border-white/10 px-2 py-1.5 text-right text-white
-                       focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
+              focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
           />
         </div>
       </div>
@@ -447,9 +445,173 @@ function DualNumberField({
   );
 }
 
-function InfoCard({
-  icon, title, body,
-}: { icon: React.ReactNode; title: string; body: React.ReactNode }) {
+function PreferredChannel() {
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
+      <span>Preferred contact method:</span>
+      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#c2a165] bg-[#c2a165] text-black">
+        <Mail size={16} /> Email
+      </span>
+    </div>
+  );
+}
+
+/****************************************
+ * ACTION BUTTONS + FEEDBACK
+ ****************************************/
+function FormActions({
+  submitContact,
+  canSend,
+  isSending,
+  sent,
+  errorMsg,
+  setName,
+  setCompany,
+  setEmail,
+  setMessage,
+  setVolume,
+  setBudget,
+  setSent,
+  setErrorMsg,
+}: any) {
+  return (
+    <>
+      <div className="flex flex-wrap gap-3 pt-2">
+        <button
+          onClick={submitContact}
+          disabled={!canSend || isSending}
+          className={`px-5 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition
+            ${
+              !canSend || isSending
+                ? "bg-[#c2a165]/50 text-black/70 cursor-not-allowed"
+                : "bg-[#c2a165] text-black hover:bg-[#a98755]"
+            }`}
+        >
+          {isSending ? "Sending…" : (
+            <>
+              <Mail size={18} /> Send enquiry
+            </>
+          )}
+        </button>
+
+        <a
+          href="/products"
+          className="px-5 py-3 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition inline-flex items-center gap-2"
+        >
+          <PackageOpen size={18} /> View products
+        </a>
+
+        <button
+          onClick={() => {
+            setName("");
+            setCompany("");
+            setEmail("");
+            setMessage("");
+            setVolume(25);
+            setBudget(200000);
+            setSent(null);
+            setErrorMsg("");
+          }}
+          className="px-5 py-3 rounded-lg border border-[#c2a165]/50 text-white hover:bg-[#c2a165] hover:text-black transition"
+        >
+          Reset
+        </button>
+      </div>
+
+      {sent === "ok" && (
+        <p className="mt-3 text-green-400 text-sm inline-flex items-center gap-2">
+          <CheckCircle2 size={16} /> Thanks! Your request was sent. We’ll reply shortly.
+        </p>
+      )}
+
+      {sent === "err" && (
+        <p className="mt-3 text-red-400 text-sm inline-flex items-center gap-2">
+          <TriangleAlert size={16} /> Couldn’t send. {errorMsg}
+        </p>
+      )}
+
+      <p className="text-xs text-white/50 flex items-center gap-2">
+        <Paperclip size={14} /> Attach technical documents in your reply email, if needed.
+      </p>
+    </>
+  );
+}
+
+/****************************************
+ * PROCESS FLOW COMPONENT
+ ****************************************/
+function ProcessFlowCard() {
+  const STEPS = [
+    {
+      title: "Inquiry & Specification",
+      desc:
+        "Share mineral requirements, preferred grade, and processing level. We'll confirm availability.",
+    },
+    {
+      title: "Quotation & Agreement",
+      desc:
+        "A detailed quotation is issued and a supply contract is signed under global trade terms.",
+    },
+    {
+      title: "Sampling & Quality Verification",
+      desc:
+        "Samples can be provided before order confirmation — client or independent inspection.",
+    },
+    {
+      title: "Logistics & Export Preparation",
+      desc:
+        "Materials transported to Port Sudan; export documentation prepared per standards.",
+    },
+    {
+      title: "Delivery Options",
+      desc:
+        "FOB Port Sudan or CIF destination port, based on logistics preference.",
+    },
+    {
+      title: "Payment & After-Sales",
+      desc:
+        "Transparent communication from order to delivery; after-sales support included.",
+    },
+  ];
+
+  return (
+    <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <Clock4 className="text-[#c2a165]" size={22} />
+        <h4 className="text-lg font-semibold">Process Flow</h4>
+      </div>
+
+      <div className="space-y-3">
+        {STEPS.map((step, i) => (
+          <div
+            key={i}
+            className="group border border-white/10 rounded-xl p-4 transition hover:border-[#c2a165] cursor-pointer"
+          >
+            <div className="text-white font-medium flex items-center gap-2">
+              <span className="text-[#c2a165]">{i + 1}.</span>
+              {step.title}
+            </div>
+
+            <div
+              className="
+                max-h-0 overflow-hidden opacity-0
+                group-hover:max-h-40 group-hover:opacity-100
+                transition-all duration-300 ease-in-out
+              "
+            >
+              <p className="text-white/70 text-sm mt-2">{step.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/****************************************
+ * BASIC CARD
+ ****************************************/
+function InfoCard({ icon, title, body }: any) {
   return (
     <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-5">
       <div className="flex items-center gap-3 mb-2">
@@ -461,7 +623,31 @@ function InfoCard({
   );
 }
 
-/* helper */
+/****************************************
+ * MAP
+ ****************************************/
+function MapBlock() {
+  return (
+    <div className="mt-8 p-0.5 rounded-xl bg-linear-to-r from-[#c2a165]/30 to-transparent">
+      <div className="rounded-xl overflow-hidden border border-white/10 shadow-lg">
+        <iframe
+          title="Port Sudan Map"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3495.085195141776!2d37.21036301509894!3d19.61633824142044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x16931f0073c4e1ad%3A0x2545a5012634eebc!2sPort%20Sudan%2C%20Sudan!5e0!3m2!1sen!2sus!4v1705250000000!5m2!1sen!2sus"
+          width="100%"
+          height="320"
+          style={{ border: 0 }}
+          loading="lazy"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </div>
+    </div>
+  );
+}
+
+/****************************************
+ * HELPERS
+ ****************************************/
 function labelFor(value: string) {
   return PRODUCT_OPTIONS.find((p) => p.value === value)?.label || "General enquiry";
 }
