@@ -545,32 +545,32 @@ function ProcessFlowCard() {
     {
       title: "Inquiry & Specification",
       desc:
-        "Share mineral requirements, preferred grade, and processing level. We'll confirm availability.",
+        "Clients share their mineral requirements, preferred grade, and processing level. Our team reviews specifications and confirms availability from our production sites.",
     },
     {
       title: "Quotation & Agreement",
       desc:
-        "A detailed quotation is issued and a supply contract is signed under global trade terms.",
+        "We issue a detailed quotation covering product specifications, delivery terms, and pricing. Once both sides agree, a supply contract is signed under internationally recognized trade terms.",
     },
     {
       title: "Sampling & Quality Verification",
       desc:
-        "Samples can be provided before order confirmation — client or independent inspection.",
+        "Before shipment, we conduct testing to confirm product quality. Samples can be provided for client review or independent verification prior to final order confirmation.",
     },
     {
       title: "Logistics & Export Preparation",
       desc:
-        "Materials transported to Port Sudan; export documentation prepared per standards.",
+        "Our operations team handles transport to Port Sudan and prepares all required export documentation in line with international standards.",
     },
     {
       title: "Delivery Options",
       desc:
-        "FOB Port Sudan or CIF destination port, based on logistics preference.",
+        "We offer flexible delivery terms. Clients may choose FOB Port Sudan or CIF to destination port, depending on their logistics preference.",
     },
     {
       title: "Payment & After-Sales",
       desc:
-        "Transparent communication from order to delivery; after-sales support included.",
+        "Payment follows the agreed contract terms. We maintain transparent communication from order to delivery to ensure a smooth and reliable experience.",
     },
   ];
 
