@@ -5,10 +5,12 @@ import { motion } from "framer-motion";
 import { Filter, Search } from "lucide-react";
 import RequestQuoteModal from "@/components/RequestQuoteModal";
 
+type Category = "Ferrous" | "Alloys" | "Non-metallic" | "Non-ferrous";
+
 type Product = {
   slug: string;
   name: string;
-  category: "Ferrous" | "Alloys" | "Non-metallic";
+  category: Category;
   image: string;
   summary: string;
   specs?: string[];
@@ -182,12 +184,24 @@ const PRODUCTS: Product[] = [
     grade: "SiO2 97–99%+",
     minOrderMt: 25,
   },
+
+  /** ---- NEW: Non-ferrous / Copper ---- */
+  {
+    slug: "copper-ore",
+    name: "Copper (Ore / Concentrate)",
+    category: "Non-ferrous",
+    image: "/products/copper.png", 
+    summary:
+      "Copper ore/concentrate for smelting and refining. Stable supply with verified documentation and sampling upon request.",
+    specs: ["Cu 30–50% (typical)", "Size: 0–10 / 10–50 mm or ROM", "Moisture ≤ 10%"],
+    grade: "Cu 30–50%",
+    minOrderMt: 25,
+  },
 ];
 
 export default function ProductsSection() {
   const [query, setQuery] = useState("");
-  const [category, setCategory] =
-    useState<"All" | "Ferrous" | "Alloys" | "Non-metallic">("All");
+  const [category, setCategory] = useState<"All" | Category>("All");
   const [quoteProduct, setQuoteProduct] =
     useState<{ slug: string; name: string } | null>(null);
 
@@ -235,97 +249,96 @@ export default function ProductsSection() {
               <Filter size={16} className="text-white/50" />
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as any)}
+                onChange={(e) => setCategory(e.target.value as "All" | Category)}
                 className="bg-transparent outline-none text-sm"
               >
                 <option>All</option>
                 <option>Ferrous</option>
                 <option>Alloys</option>
                 <option>Non-metallic</option>
+                <option>Non-ferrous</option> {/* NEW */}
               </select>
             </label>
           </div>
         </div>
 
-        {/* Grid (looser viewport trigger + base grid-cols-1) */}
-    {/* Product Grid */}
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.08 }}
-      transition={{ duration: 0.5 }}
-      className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-    >
-      {filtered.map((p) => (
-        <article
-          key={p.slug}
-          className="group rounded-2xl overflow-hidden bg-[#141414]/95 border border-white/10 hover:border-[#c2a165] transition"
+        {/* Product Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.08 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {/* Product image */}
-          <img
-            src={p.image}
-            alt={p.name}
-            className="h-48 w-full object-cover"
-            loading="lazy"
-          />
+          {filtered.map((p) => (
+            <article
+              key={p.slug}
+              className="group rounded-2xl overflow-hidden bg-[#141414]/95 border border-white/10 hover:border-[#c2a165] transition"
+            >
+              {/* Product image */}
+              <img
+                src={p.image}
+                alt={p.name}
+                className="h-48 w-full object-cover"
+                loading="lazy"
+              />
 
-          {/* Always visible content */}
-          <div className="p-5 space-y-3 text-white">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold">{p.name}</h3>
-              <span className="text-xs px-2 py-1 rounded bg-white/10 border border-white/10">
-                {p.category}
-              </span>
-            </div>
-
-            <p className="text-white/70 text-sm">{p.summary}</p>
-
-            {!!p.specs?.length && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {p.specs.slice(0, 3).map((s, i) => (
-                  <span
-                    key={i}
-                    className="text-xs px-2 py-1 rounded bg-white/5 border border-white/10"
-                  >
-                    {s}
+              {/* Always visible content */}
+              <div className="p-5 space-y-3 text-white">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-semibold">{p.name}</h3>
+                  <span className="text-xs px-2 py-1 rounded bg-white/10 border border-white/10">
+                    {p.category}
                   </span>
-                ))}
+                </div>
+
+                <p className="text-white/70 text-sm">{p.summary}</p>
+
+                {!!p.specs?.length && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {p.specs.slice(0, 3).map((s, i) => (
+                      <span
+                        key={i}
+                        className="text-xs px-2 py-1 rounded bg-white/5 border border-white/10"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 text-xs text-white/60 pt-1">
+                  {p.grade && (
+                    <span>
+                      Grade: <b className="text-white/80">{p.grade}</b>
+                    </span>
+                  )}
+                  {p.minOrderMt && (
+                    <span className="ml-auto">
+                      MOQ: <b className="text-white/80">{p.minOrderMt} mt</b>
+                    </span>
+                  )}
+                </div>
+
+                {/* Buttons */}
+                <div className="pt-3 flex gap-3">
+                  <button
+                    onClick={() => setQuoteProduct({ slug: p.slug, name: p.name })}
+                    className="px-4 py-2 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition"
+                  >
+                    Request Quote
+                  </button>
+                  <a
+                    href="/contact"
+                    className="px-4 py-2 rounded-lg border border-[#c2a165]/60 text-white hover:bg-[#c2a165] hover:text-black transition"
+                  >
+                    Contact
+                  </a>
+                </div>
               </div>
-            )}
-
-            <div className="flex items-center gap-3 text-xs text-white/60 pt-1">
-              {p.grade && (
-                <span>
-                  Grade: <b className="text-white/80">{p.grade}</b>
-                </span>
-              )}
-              {p.minOrderMt && (
-                <span className="ml-auto">
-                  MOQ: <b className="text-white/80">{p.minOrderMt} mt</b>
-                </span>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="pt-3 flex gap-3">
-              <button
-                onClick={() => setQuoteProduct({ slug: p.slug, name: p.name })}
-                className="px-4 py-2 rounded-lg bg-[#c2a165] text-black font-semibold hover:bg-[#a98755] transition"
-              >
-                Request Quote
-              </button>
-              <a
-                href="/contact"
-                className="px-4 py-2 rounded-lg border border-[#c2a165]/60 text-white hover:bg-[#c2a165] hover:text-black transition"
-              >
-                Contact
-              </a>
-            </div>
-          </div>
-        </article>
-      ))}
-    </motion.div>
-
+            </article>
+          ))}
+        </motion.div>
 
         {filtered.length === 0 && (
           <div className="text-center text-white/60 mt-16">

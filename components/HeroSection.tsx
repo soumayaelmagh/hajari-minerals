@@ -86,7 +86,7 @@ export default function HeroSection() {
           variants={child}
         >
           Hajari Minerals is a Sudanese mining and export company specializing in the
-          extraction, processing, and global supply of gold, chrome, and industrial minerals.
+          extraction, processing, and global supply of industrial minerals.
           With a commitment to responsible sourcing and sustainable growth, we bridge
           Africa’s abundant resources with international markets.
         </motion.p>

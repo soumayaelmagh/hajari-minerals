@@ -13,9 +13,9 @@ import {
   TriangleAlert,
 } from "lucide-react";
 
-/****************************************
- * PRODUCT OPTIONS
- ****************************************/
+/* ---------------------------------------------
+ * Topic options
+ * --------------------------------------------- */
 const PRODUCT_OPTIONS = [
   { label: "General enquiry", value: "general" },
   { label: "Iron Ore (Hematite / Magnetite)", value: "iron-ore" },
@@ -31,20 +31,26 @@ const PRODUCT_OPTIONS = [
   { label: "Quartz / Silica", value: "quartz" },
 ];
 
-/****************************************
- * MAIN CONTACT COMPONENT
- ****************************************/
+/* ---------------------------------------------
+ * Main component
+ * --------------------------------------------- */
 export default function ContactSection() {
+  // core fields
   const [topic, setTopic] = useState("general");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
 
-  // Soft-min volume warning
-  const [volume, setVolume] = useState<number>(25);
-  const [budget, setBudget] = useState<number>(200_000);
+  // quantities
+  const [volume, setVolume] = useState<number>(25);     // soft-min warning
+  const [budget, setBudget] = useState<number>(200_000); // slider can go down to 0; reset puts it to 0
+
+  // new: incoterm selector
+  const [incoterm, setIncoterm] = useState<"FOB" | "CIF">("FOB");
 
   const [message, setMessage] = useState("");
+
+  // UX states
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState<null | "ok" | "err">(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -52,18 +58,15 @@ export default function ContactSection() {
   // honeypot
   const honeyRef = useRef<HTMLInputElement>(null);
 
-  // form validation
+  // validation
   const canSend = useMemo(() => {
     const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     return name.trim().length > 1 && okEmail && message.trim().length > 3;
   }, [name, email, message]);
 
-  /****************************************
-   * SUBMIT HANDLER
-   ****************************************/
   async function submitContact() {
     if (!canSend || isSending) return;
-    if (honeyRef.current?.value) return; // bot trap
+    if (honeyRef.current?.value) return; // bot
 
     setIsSending(true);
     setSent(null);
@@ -82,7 +85,7 @@ export default function ContactSection() {
           volume,
           budget,
           message,
-          incoterm: "FOB",
+          incoterm,            // ← selected Incoterm
           destination: "",
           channel: "email",
         }),
@@ -104,15 +107,11 @@ export default function ContactSection() {
     }
   }
 
-  /****************************************
-   * RENDER
-   ****************************************/
   return (
     <section className="relative w-full bg-[#0b0b0b] text-white py-24 px-6 md:px-12 lg:px-24 border-t border-white/10">
       <div className="absolute inset-0 opacity-10 bg-[url('/textures/gold-dust.webp')] bg-cover bg-center pointer-events-none" />
-
       <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-14">
-        {/* LEFT FORM */}
+        {/* LEFT: FORM */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -126,18 +125,23 @@ export default function ContactSection() {
 
           <FormCard
             honeyRef={honeyRef}
+            // values
             name={name}
             company={company}
             email={email}
             message={message}
             volume={volume}
             budget={budget}
+            incoterm={incoterm}
+            // setters
             setName={setName}
             setCompany={setCompany}
             setEmail={setEmail}
             setMessage={setMessage}
             setVolume={setVolume}
             setBudget={setBudget}
+            setIncoterm={setIncoterm}
+            // actions
             submitContact={submitContact}
             canSend={canSend}
             isSending={isSending}
@@ -148,7 +152,7 @@ export default function ContactSection() {
           />
         </motion.div>
 
-        {/* RIGHT INFO */}
+        {/* RIGHT: INFO */}
         <motion.aside
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -156,7 +160,6 @@ export default function ContactSection() {
           transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-6"
         >
-          {/* Logistics + Process Flow */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
             <InfoCard
               icon={<MapPin className="text-[#c2a165]" size={22} />}
@@ -173,7 +176,6 @@ export default function ContactSection() {
             <ProcessFlowCard />
           </div>
 
-          {/* MAP */}
           <MapBlock />
         </motion.aside>
       </div>
@@ -181,9 +183,9 @@ export default function ContactSection() {
   );
 }
 
-/****************************************
- * SUB COMPONENTS
- ****************************************/
+/* ---------------------------------------------
+ * Subcomponents
+ * --------------------------------------------- */
 
 function HeaderText() {
   return (
@@ -199,7 +201,7 @@ function HeaderText() {
   );
 }
 
-function TopicSelector({ topic, setTopic }: any) {
+function TopicSelector({ topic, setTopic }: { topic: string; setTopic: (v: string) => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       {PRODUCT_OPTIONS.map((p) => (
@@ -219,29 +221,17 @@ function TopicSelector({ topic, setTopic }: any) {
   );
 }
 
-/** ---------- FORM CARD ---------- */
-function FormCard({
-  honeyRef,
-  name,
-  company,
-  email,
-  message,
-  volume,
-  budget,
-  setName,
-  setCompany,
-  setEmail,
-  setMessage,
-  setVolume,
-  setBudget,
-  submitContact,
-  canSend,
-  isSending,
-  sent,
-  errorMsg,
-  setSent,
-  setErrorMsg,
-}: any) {
+function FormCard(props: any) {
+  const {
+    honeyRef,
+    name, company, email, message,
+    volume, budget, incoterm,
+    setName, setCompany, setEmail, setMessage,
+    setVolume, setBudget, setIncoterm,
+    submitContact, canSend, isSending, sent, errorMsg,
+    setSent, setErrorMsg,
+  } = props;
+
   return (
     <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-6 space-y-6">
       {/* Honeypot */}
@@ -256,12 +246,7 @@ function FormCard({
 
       <div className="grid md:grid-cols-2 gap-4">
         <Field label="Your name" value={name} onChange={setName} placeholder="Jane Doe" />
-        <Field
-          label="Company"
-          value={company}
-          onChange={setCompany}
-          placeholder="Acme Metals Ltd."
-        />
+        <Field label="Company" value={company} onChange={setCompany} placeholder="Acme Metals Ltd." />
       </div>
 
       <Field
@@ -272,18 +257,50 @@ function FormCard({
         placeholder="you@email.com"
       />
 
+      {/* Volume + Budget */}
       <div className="grid md:grid-cols-2 gap-6">
         <VolumeField value={volume} onChange={setVolume} />
         <DualNumberField
           label="Estimated budget (USD)"
           value={budget}
           onChange={setBudget}
-          min={10_000}
+          min={0}              // ← allow zero
           max={1_000_000}
           step={10_000}
           icon={<BadgeDollarSign size={16} className="text-[#c2a165]" />}
           unit="$"
         />
+      </div>
+
+      {/* Incoterm selector */}
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-white/70 text-sm">Incoterm:</span>
+
+        <button
+          type="button"
+          onClick={() => setIncoterm("FOB")}
+          className={`px-3 py-1.5 rounded-full border text-sm transition ${
+            incoterm === "FOB"
+              ? "bg-[#c2a165] text-black border-[#c2a165]"
+              : "border-white/20 text-white/80 hover:border-white/50"
+          }`}
+          aria-pressed={incoterm === "FOB"}
+        >
+          FOB (Port Sudan)
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIncoterm("CIF")}
+          className={`px-3 py-1.5 rounded-full border text-sm transition ${
+            incoterm === "CIF"
+              ? "bg-[#c2a165] text-black border-[#c2a165]"
+              : "border-white/20 text-white/80 hover:border-white/50"
+          }`}
+          aria-pressed={incoterm === "CIF"}
+        >
+          CIF (Destination)
+        </button>
       </div>
 
       <TextArea
@@ -309,17 +326,25 @@ function FormCard({
         setMessage={setMessage}
         setVolume={setVolume}
         setBudget={setBudget}
-        setTopic={(v: string) => {}}
+        setIncoterm={setIncoterm}
       />
     </div>
   );
 }
 
-/****************************************
- * Field Components
- ****************************************/
+/* ---------------------------------------------
+ * Field primitives
+ * --------------------------------------------- */
 
-function Field({ label, value, onChange, placeholder, type = "text" }: any) {
+function Field({
+  label, value, onChange, placeholder, type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
   return (
     <label className="block text-sm">
       <span className="text-white/70">{label}</span>
@@ -334,7 +359,11 @@ function Field({ label, value, onChange, placeholder, type = "text" }: any) {
   );
 }
 
-function TextArea({ label, value, onChange, placeholder }: any) {
+function TextArea({
+  label, value, onChange, placeholder,
+}: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+}) {
   return (
     <label className="block text-sm">
       <span className="text-white/70">{label}</span>
@@ -349,8 +378,10 @@ function TextArea({ label, value, onChange, placeholder }: any) {
   );
 }
 
-/** ---- Volume with soft warning ---- */
-function VolumeField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+/** Volume: any non-negative number; soft warning if < 25 mt */
+function VolumeField({
+  value, onChange,
+}: { value: number; onChange: (v: number) => void }) {
   const SOFT_MIN = 25;
   const SLIDER_MIN = 0;
   const SLIDER_MAX = 10000;
@@ -374,11 +405,7 @@ function VolumeField({ value, onChange }: { value: number; onChange: (v: number)
               onChange(Number.isFinite(n) && n >= 0 ? n : 0);
             }}
             className={`w-28 rounded-md bg-[#0f0f0f] border px-2 py-1.5 text-right text-white focus:outline-none focus:ring-2
-              ${
-                value < SOFT_MIN
-                  ? "border-[#a97755]/60 focus:ring-[#a97755]/60"
-                  : "border-white/10 focus:ring-[#c2a165]/60"
-              }`}
+              ${value < SOFT_MIN ? "border-[#a97755]/60 focus:ring-[#a97755]/60" : "border-white/10 focus:ring-[#c2a165]/60"}`}
           />
         </div>
       </div>
@@ -403,8 +430,19 @@ function VolumeField({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
-/** ---- Slider + manual input (budget) ---- */
-function DualNumberField({ label, value, onChange, min, max, step, icon, unit }: any) {
+/** Budget: slider + manual input; CLAMPED with min=0 so user can set to 0 (also on Reset) */
+function DualNumberField({
+  label, value, onChange, min, max, step, icon, unit,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  icon?: React.ReactNode;
+  unit?: string;
+}) {
   function handleTyped(input: string) {
     const n = Number(input.replace(/[, ]/g, ""));
     if (Number.isNaN(n)) return;
@@ -427,7 +465,7 @@ function DualNumberField({ label, value, onChange, min, max, step, icon, unit }:
             value={formattedValue}
             onChange={(e) => handleTyped(e.target.value)}
             className="w-28 rounded-md bg-[#0f0f0f] border border-white/10 px-2 py-1.5 text-right text-white
-              focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
+                       focus:outline-none focus:ring-2 focus:ring-[#c2a165]/60"
           />
         </div>
       </div>
@@ -456,9 +494,9 @@ function PreferredChannel() {
   );
 }
 
-/****************************************
- * ACTION BUTTONS + FEEDBACK
- ****************************************/
+/* ---------------------------------------------
+ * Actions & feedback
+ * --------------------------------------------- */
 function FormActions({
   submitContact,
   canSend,
@@ -471,6 +509,7 @@ function FormActions({
   setMessage,
   setVolume,
   setBudget,
+  setIncoterm,
   setSent,
   setErrorMsg,
 }: any) {
@@ -481,17 +520,9 @@ function FormActions({
           onClick={submitContact}
           disabled={!canSend || isSending}
           className={`px-5 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition
-            ${
-              !canSend || isSending
-                ? "bg-[#c2a165]/50 text-black/70 cursor-not-allowed"
-                : "bg-[#c2a165] text-black hover:bg-[#a98755]"
-            }`}
+            ${!canSend || isSending ? "bg-[#c2a165]/50 text-black/70 cursor-not-allowed" : "bg-[#c2a165] text-black hover:bg-[#a98755]"}`}
         >
-          {isSending ? "Sending…" : (
-            <>
-              <Mail size={18} /> Send enquiry
-            </>
-          )}
+          {isSending ? "Sending…" : (<><Mail size={18} /> Send enquiry</>)}
         </button>
 
         <a
@@ -508,7 +539,8 @@ function FormActions({
             setEmail("");
             setMessage("");
             setVolume(25);
-            setBudget(200000);
+            setBudget(0);        // ← reset budget to zero
+            setIncoterm("FOB");  // ← reset incoterm to FOB
             setSent(null);
             setErrorMsg("");
           }}
@@ -523,54 +555,28 @@ function FormActions({
           <CheckCircle2 size={16} /> Thanks! Your request was sent. We’ll reply shortly.
         </p>
       )}
-
       {sent === "err" && (
         <p className="mt-3 text-red-400 text-sm inline-flex items-center gap-2">
           <TriangleAlert size={16} /> Couldn’t send. {errorMsg}
         </p>
       )}
-
     </>
   );
 }
 
-/****************************************
- * PROCESS FLOW COMPONENT
- ****************************************/
+/* ---------------------------------------------
+ * Process flow (hover/click reveal)
+ * --------------------------------------------- */
 function ProcessFlowCard() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const STEPS = [
-    {
-      title: "Inquiry & Specification",
-      desc:
-        "Share mineral requirements, preferred grade, and processing level. We'll confirm availability.",
-    },
-    {
-      title: "Quotation & Agreement",
-      desc:
-        "A detailed quotation is issued and a supply contract is signed under global trade terms.",
-    },
-    {
-      title: "Sampling & Quality Verification",
-      desc:
-        "Samples can be provided before order confirmation, client or independent inspection.",
-    },
-    {
-      title: "Logistics & Export Preparation",
-      desc:
-        "Materials transported to Port Sudan; export documentation prepared per standards.",
-    },
-    {
-      title: "Delivery Options",
-      desc:
-        "FOB Port Sudan or CIF destination port, based on logistics preference.",
-    },
-    {
-      title: "Payment & After-Sales",
-      desc:
-        "Transparent communication from order to delivery; after-sales support included.",
-    },
+    { title: "Inquiry & Specification", desc: "Share mineral requirements, preferred grade, and processing level. We'll confirm availability." },
+    { title: "Quotation & Agreement", desc: "A detailed quotation is issued and a supply contract is signed under global trade terms." },
+    { title: "Sampling & Quality Verification", desc: "Samples can be provided before order confirmation, client or independent inspection." },
+    { title: "Logistics & Export Preparation", desc: "Materials transported to Port Sudan; export documentation prepared per standards." },
+    { title: "Delivery Options", desc: "FOB Port Sudan or CIF destination port, based on logistics preference." },
+    { title: "Payment & After-Sales", desc: "Transparent communication from order to delivery; after-sales support included." },
   ];
 
   function toggle(i: number) {
@@ -587,38 +593,24 @@ function ProcessFlowCard() {
       <div className="space-y-3">
         {STEPS.map((step, i) => {
           const isOpen = openIndex === i;
-
           return (
             <div
               key={i}
-              className={`
-                group border border-white/10 rounded-xl p-4 transition cursor-pointer
-                hover:border-[#c2a165]
-              `}
+              className="group border border-white/10 rounded-xl p-4 transition cursor-pointer hover:border-[#c2a165]"
               onClick={() => toggle(i)}
             >
-              {/* Title row */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-white font-medium">
                   <span className="text-[#c2a165]">{i + 1}.</span>
                   {step.title}
                 </div>
-
-                <div
-                  className={`
-                    text-[#c2a165] transition-transform
-                    ${isOpen ? "rotate-90" : ""}
-                  `}
-                >
-                  ▸
-                </div>
+                <div className={`text-[#c2a165] transition-transform ${isOpen ? "rotate-90" : ""}`}>▸</div>
               </div>
 
-              {/* Content: visible on hover (desktop) OR when open (mobile) */}
+              {/* Show on hover (desktop) or when opened (mobile/tablet) */}
               <div
                 className={`
-                  text-white/70 text-sm mt-2
-                  overflow-hidden transition-all duration-300 ease-in-out
+                  text-white/70 text-sm mt-2 overflow-hidden transition-all duration-300 ease-in-out
                   ${isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"}
                   group-hover:max-h-40 group-hover:opacity-100
                 `}
@@ -632,10 +624,11 @@ function ProcessFlowCard() {
     </div>
   );
 }
-/****************************************
- * BASIC CARD
- ****************************************/
-function InfoCard({ icon, title, body }: any) {
+
+/* ---------------------------------------------
+ * Info card & Map
+ * --------------------------------------------- */
+function InfoCard({ icon, title, body }: { icon: React.ReactNode; title: string; body: React.ReactNode }) {
   return (
     <div className="bg-[#141414]/90 border border-white/10 rounded-2xl p-5">
       <div className="flex items-center gap-3 mb-2">
@@ -647,9 +640,6 @@ function InfoCard({ icon, title, body }: any) {
   );
 }
 
-/****************************************
- * MAP
- ****************************************/
 function MapBlock() {
   return (
     <div className="mt-8 p-0.5 rounded-xl bg-linear-to-r from-[#c2a165]/30 to-transparent">
@@ -663,15 +653,15 @@ function MapBlock() {
           loading="lazy"
           allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
-        ></iframe>
+        />
       </div>
     </div>
   );
 }
 
-/****************************************
- * HELPERS
- ****************************************/
+/* ---------------------------------------------
+ * Helper
+ * --------------------------------------------- */
 function labelFor(value: string) {
   return PRODUCT_OPTIONS.find((p) => p.value === value)?.label || "General enquiry";
 }

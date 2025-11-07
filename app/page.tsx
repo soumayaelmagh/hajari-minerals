@@ -13,7 +13,6 @@ export default function HomePage() {
       <Header />
       <HeroClient />
       <OperationsSection />
-      <ProductsSection />
       <SustainabilitySection />
       <Footer />
     </main>
