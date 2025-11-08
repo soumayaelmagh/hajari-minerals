@@ -163,10 +163,9 @@ export default function ContactSection() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
             <InfoCard
               icon={<MapPin className="text-[#c2a165]" size={22} />}
-              title="Logistics"
+              title="Office location"
               body={
                 <ul className="list-inside space-y-1 text-white/75 text-sm">
-                  <li>Shipments coordinated via Port Sudan under FOB/CIF.</li>
                   <li>Atayib Salih Street, Manshiya, Khartoum.</li>
                   <li>Hai Al Matar, Port Sudan.</li>
                 </ul>
