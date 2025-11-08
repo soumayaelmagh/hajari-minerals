@@ -29,6 +29,7 @@ const PRODUCT_OPTIONS = [
   { label: "Kaolin", value: "kaolin" },
   { label: "Feldspar", value: "feldspar" },
   { label: "Quartz / Silica", value: "quartz" },
+  { label: "Copper", value: "copper" },
 ];
 
 /* ---------------------------------------------
